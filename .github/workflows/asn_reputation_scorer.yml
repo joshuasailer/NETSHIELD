@@ -122,9 +122,9 @@ jobs:
 
               # Spamhaus-Check: Prüfe ob einer der IPs in DROP-CIDRs fällt
               # (Vereinfachung: wir prüfen die ersten 5 IPs dieses ASN)
-              asn_ips = [ip for ip in sample if True]  # alle IPs des ASN
-              # Emerging Threats Check
-              et_hits = sum(1 for ip in sample if ip in et_ips)
+              # Emerging Threats Check - proportional zum ASN-Anteil
+              asn_ratio = count / max(len(sample), 1)
+              et_hits = int(sum(1 for ip in sample if ip in et_ips) * asn_ratio)
               score += et_hits * 15
 
               asn_scores[asn] = {
