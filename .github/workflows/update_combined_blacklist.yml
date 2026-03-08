@@ -92,14 +92,12 @@ jobs:
               "https://raw.githubusercontent.com/MagicTeaMC/bad-ips/refs/heads/main/bad-ips.txt",
               "https://raw.githubusercontent.com/bitwire-it/ipblocklist/refs/heads/main/ip-list.txt",
               "https://cdn.jsdelivr.net/gh/LittleJake/ip-blacklist/all_blacklist.txt",
-              "https://raw.githubusercontent.com/stamparm/ipsum/refs/heads/master/ipsum.txt",
               "https://raw.githubusercontent.com/dolutech/blacklist-dolutech/refs/heads/main/Black-list-semanal-dolutech.txt",
               "https://raw.githubusercontent.com/ZEROF/ipextractor/refs/heads/main/ipexdbl.txt",
               "https://raw.githubusercontent.com/ddrimus/http-threat-blocklist/refs/heads/main/blocklist.txt",
               "https://raw.githubusercontent.com/BlacKSnowDot0/packetsdatabase-db/refs/heads/main/ip_list.txt",
               "https://raw.githubusercontent.com/FreakuencyFive/Public-IP-ThreatFeed/refs/heads/main/blacklist.txt",
               "https://raw.githubusercontent.com/4IP-Solutions/threat-feeds/refs/heads/main/blocklist-incoming-ip-high-security.txt",
-              "https://raw.githubusercontent.com/Ultimate-Hosts-Blacklist/Ultimate.Hosts.Blacklist/refs/heads/master/ips/ips0.list",
               "https://raw.githubusercontent.com/amitambekar510/Malicious-IP-Threat-List/refs/heads/main/Malicious-IP-Threat-List.txt",
               "https://raw.githubusercontent.com/amitambekar510/Malicious-IP-Threat-List/main/Malicious-IP-Threat-List_aa",
               "https://raw.githubusercontent.com/cybersecurity-cyna/Malicious_IP/refs/heads/main/ip-list.txt",
@@ -111,6 +109,30 @@ jobs:
           ]
 
           IP_PATTERN = re.compile(r'\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b')
+
+          # Bekannte DNS/NTP/legitime Server-IPs ausschließen
+          DNS_WHITELIST = {
+              # Google
+              "8.8.8.8", "8.8.4.4",
+              # Cloudflare
+              "1.1.1.1", "1.0.0.1",
+              # OpenDNS
+              "208.67.222.222", "208.67.220.220",
+              # Quad9
+              "9.9.9.9", "149.112.112.112",
+              # AdGuard
+              "94.140.14.14", "94.140.15.15",
+              # Level3
+              "4.2.2.1", "4.2.2.2",
+              # Comodo
+              "8.26.56.26", "8.20.247.20",
+              # Neustar
+              "156.154.70.1", "156.154.71.1",
+              # NTP Pool
+              "129.6.15.28", "129.6.15.29",
+              # Localhost/Private (werden sowieso nicht geroutet)
+              "127.0.0.1", "0.0.0.0",
+          }
           EXPIRY_DAYS = 60
           DB_FILE = "threat_db.json"
 
@@ -138,6 +160,21 @@ jobs:
                   print(f"OK: {url.split('/')[-1]} → {len(found)} IPs")
               except Exception as e:
                   print(f"FEHLER: {url.split('/')[-1]} → {e}")
+
+          # DNS-Whitelist herausfiltern
+          current_ips -= DNS_WHITELIST
+          # Private/reservierte IP-Ranges ausschließen
+          def is_private(ip):
+              parts = list(map(int, ip.split('.')))
+              return (
+                  parts[0] == 10 or
+                  (parts[0] == 172 and 16 <= parts[1] <= 31) or
+                  (parts[0] == 192 and parts[1] == 168) or
+                  parts[0] == 127 or
+                  parts[0] == 0 or
+                  parts[0] >= 224
+              )
+          current_ips = {ip for ip in current_ips if not is_private(ip)}
 
           # Datenbank aktualisieren
           for ip in current_ips:
