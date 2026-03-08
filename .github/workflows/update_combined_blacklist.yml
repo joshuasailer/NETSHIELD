@@ -36,9 +36,9 @@ jobs:
             threat_db.json
             discovered_feeds.json
             ip_ai_model.joblib
-          key: threat-ai-cache
+          key: threat-ai-cache-${{ github.run_id }}
           restore-keys: |
-            threat-ai-
+            threat-ai-cache-
 
       - name: Fetch, discover, learn and build IPv4 lists
         run: |
@@ -463,7 +463,8 @@ jobs:
               strong = item.get("strong_feeds", 0)
               mal = item.get("malware_feeds", 0)
               cloud = item.get("cloud_hits", 0)
-              raw = (s * 0.05) + (fc * 0.04) + (strong * 0.12) + (mal * 0.12) - (cloud * 0.55)
+              # Gewichtung erhöht damit fallback auch ohne KI-Modell realistische Werte liefert
+              raw = (s * 0.08) + (fc * 0.10) + (strong * 0.18) + (mal * 0.18) - (cloud * 0.55)
               raw = max(0, min(raw, 0.99))
               return raw
 
@@ -493,16 +494,27 @@ jobs:
                       datacenter_watchlist.append(ip)
                   continue
 
+              # Primäre Bedingung: KI-Wahrscheinlichkeit + Mindest-Score + 2 Feeds
+              # Sekundäre Bedingung: sehr hoher Score in starken Feeds (auch ohne KI-Modell)
+              # Kaltstart-Bedingung: 3+ Feeds oder malware_feed + score >= 8
               if (
-                  prob >= 0.88 and
+                  prob >= 0.75 and
                   item.get("score", 0) >= 6 and
                   item.get("feed_count", 0) >= 2
               ) or (
                   item.get("score", 0) >= 16 and
                   item.get("strong_feeds", 0) >= 1
+              ) or (
+                  item.get("feed_count", 0) >= 3 and
+                  item.get("score", 0) >= 8 and
+                  item.get("cloud_hits", 0) == 0
+              ) or (
+                  item.get("malware_feeds", 0) >= 1 and
+                  item.get("score", 0) >= 6 and
+                  item.get("cloud_hits", 0) == 0
               ):
                   blacklist.append(ip)
-              elif prob >= 0.60 or item.get("score", 0) >= 6:
+              elif prob >= 0.45 or item.get("score", 0) >= 5:
                   watchlist.append(ip)
 
           blacklist = sorted(set(blacklist), key=lambda ip: (-db[ip]["last_probability"], -db[ip]["score"], ip))
