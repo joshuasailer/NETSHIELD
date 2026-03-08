@@ -145,6 +145,23 @@ Jede IP erhält einen **Score** basierend darauf, in wie vielen der 69 Quellen s
 
 IPs die **60 Tage lang** in keiner Quelle mehr auftauchen werden automatisch aus der Liste entfernt. So bleibt die Liste aktuell und frei von veralteten Einträgen.
 
+#### ⚠️ Hinweis zu Cloud-IPs
+
+Große Cloud-Anbieter wie **Google Cloud (GCP)**, **Amazon AWS** und **Microsoft Azure** stellen ihre IP-Ranges öffentlich vermieten — das bedeutet: dieselbe IP kann heute ein legitimer Dienst sein und morgen ein Angreifer. Viele Threat-Intelligence-Quellen listen solche Cloud-IPs, wenn sie für Angriffe missbraucht wurden.
+
+**Mögliche Falsch-Positive:**
+
+| Anbieter | Beispiel-Range | Hinweis |
+|---|---|---|
+| Google Cloud (GCP) | `34.x.x.x` · `35.x.x.x` | Gemietet — kann legitime Dienste hosten |
+| Amazon AWS | `3.x.x.x` · `52.x.x.x` | Gemietet — kann legitime Dienste hosten |
+| Microsoft Azure | `20.x.x.x` · `40.x.x.x` | Gemietet — kann legitime Dienste hosten |
+| DigitalOcean | `157.x.x.x` · `167.x.x.x` | Gemietet — kann legitime Dienste hosten |
+
+> 💡 **Empfehlung:** Vor dem Einsatz auf Produktiv-Firewalls eine **Whitelist-Prüfung** durchführen. Falls du Cloud-Dienste (z.B. Google Workspace, Microsoft 365, AWS S3) aktiv nutzt, stelle sicher dass deren IP-Ranges nicht geblockt werden. Die offizielle IP-Liste der jeweiligen Anbieter findest du bei Google, AWS und Microsoft in deren Dokumentation.
+
+---
+
 #### 🔒 Eingebaute Schutzfilter
 
 Folgende IPs können **nie** in die Liste aufgenommen werden:
