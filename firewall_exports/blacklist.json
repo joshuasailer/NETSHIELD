@@ -1,0 +1,8 @@
+{
+  "name": "NETSHIELD Combined Threat Blacklist",
+  "description": "Automatisch generierte IPv4-Blockliste",
+  "updated": "2026-03-08T17:35:22Z",
+  "source": "https://github.com/juergen2025sys/NETSHIELD",
+  "count": 0,
+  "ips": []
+}
