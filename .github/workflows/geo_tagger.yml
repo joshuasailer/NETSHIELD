@@ -74,7 +74,7 @@ jobs:
 
               try:
                   req = urllib.request.Request(
-                      "http://ip-api.com/batch?fields=status,country,countryCode,city,org,as,isp,proxy,hosting",
+                      "https://ip-api.com/batch?fields=status,country,countryCode,city,org,as,isp,proxy,hosting",
                       data=payload,
                       headers={
                           "Content-Type": "application/json",
