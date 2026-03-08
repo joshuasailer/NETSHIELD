@@ -3,110 +3,110 @@
 
 # 🛡️ NETSHIELD
 
-### Complete IPv4 Blocklist Suite for Firewalls & Network Security
+### Vollständige IPv4-Blocklist-Suite für Firewalls & Netzwerksicherheit
 
 ![IPv4](https://img.shields.io/badge/IPv4-254%2C556%20Ranges-blue?style=flat-square)
-![Countries](https://img.shields.io/badge/Countries-249-green?style=flat-square)
-![Continents](https://img.shields.io/badge/Continents-6-orange?style=flat-square)
-![Update](https://img.shields.io/badge/Update-Automatic-brightgreen?style=flat-square)
-![License](https://img.shields.io/badge/License-Free-lightgrey?style=flat-square)
+![Countries](https://img.shields.io/badge/L%C3%A4nder-249-green?style=flat-square)
+![Continents](https://img.shields.io/badge/Kontinente-6-orange?style=flat-square)
+![Update](https://img.shields.io/badge/Update-Automatisch-brightgreen?style=flat-square)
+![License](https://img.shields.io/badge/Lizenz-Kostenlos-lightgrey?style=flat-square)
 
-*Designed for OPNsense · pfSense · FortiGate · and any firewall supporting IP blocklists*
+*Entwickelt für OPNsense · pfSense · FortiGate · und jede Firewall mit IP-Blocklist-Unterstützung*
 
 </div>
 
 ---
 
-## 📌 Overview
+## 📌 Übersicht
 
-NETSHIELD provides ready-to-use IPv4 blocklists organized by country, continent, and threat confidence level. All lists are automatically updated and available as raw links — simply paste into your firewall and forget.
+NETSHIELD bietet fertige IPv4-Blocklisten, organisiert nach Land, Kontinent und Bedrohungs-Konfidenzniveau. Alle Listen werden automatisch aktualisiert und sind als Raw-Links verfügbar — einfach in die Firewall einfügen und vergessen.
 
 ---
 
-## 🌍 All Countries
+## 🌍 Alle Länder
 
-| Property | Value |
+| Eigenschaft | Wert |
 |---|---|
-| **Entries** | ~254,556 CIDR ranges |
-| **Format** | CIDR (e.g. `1.0.0.0/24`) |
-| **Update** | Automatic |
+| **Einträge** | ~254.556 CIDR-Ranges |
+| **Format** | CIDR (z.B. `1.0.0.0/24`) |
+| **Update** | Automatisch |
 | **Raw Link** | [all_countries_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/all_countries_ipv4.txt) |
 
-**Use Case:** Block all incoming WAN traffic from every country in the world with a single list. Perfect for firewalls where no inbound connections are needed — completely eliminates the attack surface from foreign IPs.
+**Verwendungszweck:** Blockiert den gesamten eingehenden WAN-Verkehr aus allen Ländern der Welt mit einer einzigen Liste. Ideal für Firewalls, bei denen keine eingehenden Verbindungen benötigt werden — eliminiert die Angriffsfläche durch ausländische IPs vollständig.
 
 ---
 
-## 🌐 Continent Blocklists
+## 🌐 Kontinent-Blocklisten
 
-Block entire regions with a single link.
+Ganze Regionen mit einem einzigen Link blockieren.
 
-| Continent | Raw Link |
+| Kontinent | Raw Link |
 |---|---|
-| 🇪🇺 Europe | [europe_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/continents/europe_ipv4.txt) |
-| 🌏 Asia | [asia_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/continents/asia_ipv4.txt) |
-| 🌍 Africa | [africa_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/continents/africa_ipv4.txt) |
-| 🌎 North America | [north_america_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/continents/north_america_ipv4.txt) |
-| 🌎 South America | [south_america_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/continents/south_america_ipv4.txt) |
-| 🌊 Oceania | [oceania_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/continents/oceania_ipv4.txt) |
+| 🇪🇺 Europa | [europe_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/continents/europe_ipv4.txt) |
+| 🌏 Asien | [asia_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/continents/asia_ipv4.txt) |
+| 🌍 Afrika | [africa_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/continents/africa_ipv4.txt) |
+| 🌎 Nordamerika | [north_america_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/continents/north_america_ipv4.txt) |
+| 🌎 Südamerika | [south_america_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/continents/south_america_ipv4.txt) |
+| 🌊 Ozeanien | [oceania_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/continents/oceania_ipv4.txt) |
 
 ---
 
-## 🗺️ Country Blocklists
+## 🗺️ Länder-Blocklisten
 
-Block individual countries — organized by continent. Use the raw link directly in your firewall.
+Einzelne Länder blockieren — nach Kontinent organisiert. Den Raw-Link direkt in der Firewall verwenden.
 
-**Raw link pattern:**
+**Raw-Link-Schema:**
 ```
-https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/countries/{continent}/{country}_ipv4.txt
+https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/countries/{kontinent}/{land}_ipv4.txt
 ```
 
-**Examples:**
-| Country | Raw Link |
+**Beispiele:**
+| Land | Raw Link |
 |---|---|
 | 🇮🇷 Iran | [iran_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/countries/asia/iran_ipv4.txt) |
 | 🇨🇳 China | [china_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/countries/asia/china_ipv4.txt) |
-| 🇷🇺 Russia | [russia_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/countries/europe/russia_ipv4.txt) |
-| 🇺🇸 United States | [united_states_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/countries/north_america/united_states_ipv4.txt) |
-| 🇧🇷 Brazil | [brazil_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/countries/south_america/brazil_ipv4.txt) |
+| 🇷🇺 Russland | [russia_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/countries/europe/russia_ipv4.txt) |
+| 🇺🇸 USA | [united_states_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/countries/north_america/united_states_ipv4.txt) |
+| 🇧🇷 Brasilien | [brazil_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/countries/south_america/brazil_ipv4.txt) |
 | 🇳🇬 Nigeria | [nigeria_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/countries/africa/nigeria_ipv4.txt) |
 
-> Browse all 249 country files in the [`countries/`](https://github.com/juergen2025sys/NETSHIELD/tree/main/countries) folder.
+> Alle 249 Länderdateien im [`countries/`](https://github.com/juergen2025sys/NETSHIELD/tree/main/countries) Ordner durchsuchen.
 
 ---
 
-## 🚫 Threat Intelligence Lists
+## 🚫 Threat-Intelligence-Listen
 
-### Blacklist — High Confidence (≥ 40%)
+### Blacklist — Hohe Konfidenz (≥ 40%)
 
-| Property | Value |
+| Eigenschaft | Wert |
 |---|---|
-| **Content** | Confirmed malicious IPs with confidence score ≥ 40% |
-| **Format** | One IP per line |
-| **Update** | Automatic · Daily |
+| **Inhalt** | Bestätigte bösartige IPs mit Konfidenzniveau ≥ 40% |
+| **Format** | Eine IP pro Zeile |
+| **Update** | Automatisch · Täglich |
 | **Raw Link** | [blacklist_confidence40_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/blacklist_confidence40_ipv4.txt) |
 
-**Use Case:** Block high-confidence threat IPs — known attackers, scanners, brute-force bots, and malicious actors. Recommended for **hard blocking**.
+**Verwendungszweck:** Hochkonfidente Bedrohungs-IPs blockieren — bekannte Angreifer, Scanner, Brute-Force-Bots und bösartige Akteure. Empfohlen für **hartes Blockieren**.
 
 ---
 
-### Watchlist — Low Confidence (20–39%)
+### Watchlist — Niedrige Konfidenz (20–39%)
 
-| Property | Value |
+| Eigenschaft | Wert |
 |---|---|
-| **Content** | Suspicious IPs with confidence score 20–39% |
-| **Format** | One IP per line |
-| **Update** | Automatic · Daily |
+| **Inhalt** | Verdächtige IPs mit Konfidenzniveau 20–39% |
+| **Format** | Eine IP pro Zeile |
+| **Update** | Automatisch · Täglich |
 | **Raw Link** | [watchlist_confidence20to39_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/watchlist_confidence20to39_ipv4.txt) |
 
-**Use Case:** Monitor or soft-block low-confidence suspicious IPs — useful for rate limiting, logging, or stricter inspection rules.
+**Verwendungszweck:** Niedrigkonfidente verdächtige IPs überwachen oder weich blockieren — nützlich für Rate-Limiting, Logging oder strengere Inspektionsregeln.
 
-> ⚠️ **Warning:** This list has a **high false positive rate**. Many IPs may be legitimate users, shared hosting, or dynamic IPs that were temporarily flagged. Recommended for **logging and monitoring only** — not for hard blocking.
+> ⚠️ **Warnung:** Diese Liste hat eine **hohe Falsch-Positiv-Rate**. Viele IPs können legitime Nutzer, Shared-Hosting oder dynamische IPs sein, die vorübergehend markiert wurden. Empfohlen nur für **Logging und Monitoring** — nicht für hartes Blockieren.
 
 ---
 
-### 🤖 Bot Detector Blacklist
+### 🤖 Bot-Detector-Blacklist
 
-| Property | Value |
+| Eigenschaft | Wert |
 |---|---|
 | **Inhalt** | Bots, Scraper, Scanner, DDoS-Quellen, VPN/Proxy-Missbrauch, Cloud-Bots |
 | **Format** | Eine IP pro Zeile |
@@ -126,46 +126,46 @@ https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/countries/{conti
 
 ---
 
-## ✅ Tested & Verified
+## ✅ Getestet & Verifiziert
 
-All IP ranges have been verified to be present in `all_countries_ipv4.txt`:
+Alle IP-Ranges wurden auf Vorhandensein in `all_countries_ipv4.txt` geprüft:
 
-| Country | Sample IP | Verified CIDR |
+| Land | Beispiel-IP | Verifiziertes CIDR |
 |---|---|---|
-| 🇷🇺 Russia | 5.8.18.100 | ✅ 5.8.16.0/21 |
+| 🇷🇺 Russland | 5.8.18.100 | ✅ 5.8.16.0/21 |
 | 🇨🇳 China | 113.195.145.80 | ✅ 113.194.0.0/15 |
-| 🇧🇷 Brazil | 177.75.40.100 | ✅ 177.75.40.0/21 |
-| 🇮🇳 India | 103.10.197.50 | ✅ 103.10.197.0/24 |
-| 🇧🇬 Bulgaria | 31.170.100.50 | ✅ 31.170.100.0/22 |
+| 🇧🇷 Brasilien | 177.75.40.100 | ✅ 177.75.40.0/21 |
+| 🇮🇳 Indien | 103.10.197.50 | ✅ 103.10.197.0/24 |
+| 🇧🇬 Bulgarien | 31.170.100.50 | ✅ 31.170.100.0/22 |
 | 🇻🇳 Vietnam | 45.125.65.50 | ✅ 45.125.64.0/22 |
-| 🇷🇴 Romania | 82.80.100.200 | ✅ 82.80.0.0/15 |
+| 🇷🇴 Rumänien | 82.80.100.200 | ✅ 82.80.0.0/15 |
 | 🇵🇰 Pakistan | 203.78.120.30 | ✅ 203.78.112.0/20 |
 
 ---
 
-## 🗺️ Notes on Continent Assignment
+## 🗺️ Hinweise zur Kontinentzuordnung
 
-| Country | Assigned to | Note |
+| Land | Zugeordnet zu | Hinweis |
 |---|---|---|
-| 🇹🇷 Turkey (TR) | Asia | Transcontinental — majority of land mass is in Asia |
-| 🇷🇺 Russia (RU) | Europe | Politically European, but spans all of Asia too |
-| 🇬🇱 Greenland (GL) | Europe | Danish territory — geographically North America |
-| 🇨🇾 Cyprus (CY) | Europe | Politically European (EU member), geographically closer to Asia |
+| 🇹🇷 Türkei (TR) | Asien | Transkontinental — Großteil der Landfläche liegt in Asien |
+| 🇷🇺 Russland (RU) | Europa | Politisch europäisch, erstreckt sich aber über ganz Asien |
+| 🇬🇱 Grönland (GL) | Europa | Dänisches Territorium — geografisch Nordamerika |
+| 🇨🇾 Zypern (CY) | Europa | Politisch europäisch (EU-Mitglied), geografisch näher an Asien |
 
-> For firewall purposes this does not matter — every IP is always present in `all_countries_ipv4.txt`.
-
----
-
-## 🔧 Works Great In Combination With
-
-- 🖥️ Datacenter IP lists — AWS, Azure, Hetzner, etc.
-- 🔒 VPN provider lists — NordVPN, ProtonVPN, etc.
-- 🧅 TOR exit node lists
-- 🕵️ Threat intelligence feeds
-- 🛑 Known malicious IP lists
+> Für Firewall-Zwecke spielt dies keine Rolle — jede IP ist immer in `all_countries_ipv4.txt` enthalten.
 
 ---
 
-## 📜 License
+## 🔧 Funktioniert gut in Kombination mit
 
-Free to use for any purpose. No attribution required.
+- 🖥️ Rechenzentrum-IP-Listen — AWS, Azure, Hetzner usw.
+- 🔒 VPN-Anbieter-Listen — NordVPN, ProtonVPN usw.
+- 🧅 TOR-Exit-Node-Listen
+- 🕵️ Threat-Intelligence-Feeds
+- 🛑 Bekannte bösartige IP-Listen
+
+---
+
+## 📜 Lizenz
+
+Kostenlos für jeden Zweck nutzbar. Keine Namensnennung erforderlich.
