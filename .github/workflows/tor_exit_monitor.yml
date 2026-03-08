@@ -62,7 +62,11 @@ jobs:
               if text:
                   ips = set(IP_RE.findall(text))
                   # Private IPs rausfiltern
-                  ips = {ip for ip in ips if not ip.startswith(("10.","192.168.","127."))}
+                  ips = {ip for ip in ips if not (
+                      ip.startswith("10.") or ip.startswith("192.168.") or
+                      ip.startswith("127.") or ip.startswith("172.") or
+                      ip.startswith("0.") or ip.startswith("169.254.")
+                  )}
                   all_tor_ips.update(ips)
                   source_stats[name] = len(ips)
                   print(f"  {name}: {len(ips)} IPs")
@@ -93,21 +97,9 @@ jobs:
 
           print(f"tor_exit_nodes.txt: {len(final_ips)} IPs | +{len(new_ips)} neu | -{len(removed_ips)} entfernt")
 
-          # ── combined_threat_blacklist_ipv4.txt aktualisieren ──────────────
-          BLACKLIST = "combined_threat_blacklist_ipv4.txt"
-          if os.path.exists(BLACKLIST):
-              with open(BLACKLIST) as f:
-                  bl_content = f.read()
-              existing_bl = set(IP_RE.findall(bl_content))
-              tor_new_for_bl = all_tor_ips - existing_bl
-
-              if tor_new_for_bl:
-                  with open(BLACKLIST, "a") as f:
-                      f.write(f"\n# Tor Exit Nodes – hinzugefügt {now_str}\n")
-                      f.write("\n".join(sorted(tor_new_for_bl)) + "\n")
-                  print(f"Blacklist: +{len(tor_new_for_bl)} Tor-IPs hinzugefügt")
-              else:
-                  print("Blacklist: Keine neuen Tor-IPs")
+          # Tor-IPs werden NICHT direkt in combined_threat_blacklist_ipv4.txt geschrieben.
+          # Der combined-blacklist-Workflow liest tor_exit_nodes.txt als Feed-Quelle ein.
+          print(f"tor_exit_nodes.txt fertig – wird vom combined-blacklist-Workflow eingelesen.")
 
           # ── Report ────────────────────────────────────────────────────────
           lines = []
@@ -146,6 +138,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add tor_exit_nodes.txt tor_exit_report.md combined_threat_blacklist_ipv4.txt
+          git add tor_exit_nodes.txt tor_exit_report.md
           git diff --staged --quiet || git commit -m "Tor Exit Nodes aktualisiert [$(date -u '+%Y-%m-%d %H:%M') UTC]"
           git push
