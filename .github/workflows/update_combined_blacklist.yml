@@ -93,6 +93,8 @@ jobs:
               "sefinek": "https://raw.githubusercontent.com/sefinek/Malicious-IP-Addresses/main/lists/main.txt",
               "netshield_blacklist": "https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/refs/heads/main/blacklist_confidence40_ipv4.txt",
               "netshield_botdetector": "https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/refs/heads/main/bot_detector_blacklist_ipv4.txt",
+              "netshield_tor_exits": "https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/refs/heads/main/tor_exit_nodes.txt",
+              "netshield_cve_exploits": "https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/refs/heads/main/cve_exploit_ips.txt",
           }
 
           DISCOVERY_PAGES = [
