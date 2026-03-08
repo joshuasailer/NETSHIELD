@@ -20,17 +20,17 @@ jobs:
         run: |
           python3 << 'EOF'
           import urllib.request
-          import urllib.error
           import json
           import re
           import os
           import time
+          import ipaddress
           from datetime import datetime, timezone
           from collections import defaultdict
 
           now = datetime.now(timezone.utc)
           now_str = now.strftime("%Y-%m-%d %H:%M UTC")
-          IP_RE   = re.compile(r'\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b')
+          IP_RE = re.compile(r'\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b')
 
           def fetch_raw(url, timeout=20):
               try:
@@ -48,22 +48,31 @@ jobs:
               except:
                   return None
 
-          # ── Schritt 1: IPs aus Blacklist laden ───────────────────────────
+          def ip_in_cidrs(ip, cidrs):
+              try:
+                  addr = ipaddress.ip_address(ip)
+                  for c in cidrs:
+                      try:
+                          if addr in ipaddress.ip_network(c, strict=False):
+                              return True
+                      except:
+                          pass
+              except:
+                  pass
+              return False
+
           BLACKLIST = "combined_threat_blacklist_ipv4.txt"
           blacklist_ips = []
           if os.path.exists(BLACKLIST):
               with open(BLACKLIST) as f:
                   blacklist_ips = [l.strip() for l in f if l.strip() and not l.startswith("#")]
               print(f"Blacklist geladen: {len(blacklist_ips)} IPs")
-          else:
-              print(f"WARNUNG: {BLACKLIST} nicht gefunden – nur Feed-Daten werden verwendet")
 
-          # ── Schritt 2: ASN pro IP bestimmen (iptoasn.com, kein Key) ──────
           print("\nASN-Lookup via iptoasn.com (Sample: 300 IPs)...")
-          asn_ip_count  = defaultdict(int)
-          asn_meta      = {}   # asn -> {holder, country}
-
+          asn_ip_count = defaultdict(int)
+          asn_meta     = {}
           sample = blacklist_ips[:300]
+
           for i, ip in enumerate(sample):
               if i % 50 == 0:
                   print(f"  {i}/{len(sample)}...")
@@ -79,67 +88,53 @@ jobs:
                               "country": data.get("as_country_code", "??")
                           }
 
-          # ── Schritt 3: Abuse-Score berechnen ─────────────────────────────
-          # Score-Faktoren:
-          #   +10 pro IP in der Blacklist
-          #   +20 wenn ASN in Spamhaus DROP-Feed
-          #   +15 wenn ASN in Emerging Threats
-          #   +5  wenn Country in High-Risk-Liste
-
           HIGH_RISK_COUNTRIES = {"CN","RU","KP","IR","NG","BR","IN","VN","UA","RO"}
 
           print("\nSpamhaus DROP laden...")
-          drop_text = fetch_raw("https://www.spamhaus.org/drop/drop.txt") or ""
+          drop_text  = fetch_raw("https://www.spamhaus.org/drop/drop.txt") or ""
           drop_cidrs = set(re.findall(r'(\d+\.\d+\.\d+\.\d+/\d+)', drop_text))
 
           print("Emerging Threats laden...")
           et_text = fetch_raw("https://rules.emergingthreats.net/fwrules/emerging-Block-IPs.txt") or ""
           et_ips  = set(IP_RE.findall(et_text))
 
-          # RIPE ASN → Prefix-Mapping für DROP-Prüfung
-          import ipaddress
-          def ip_in_cidrs(ip, cidrs):
-              try:
-                  addr = ipaddress.ip_address(ip)
-                  for c in cidrs:
-                      try:
-                          if addr in ipaddress.ip_network(c, strict=False):
-                              return True
-                      except:
-                          pass
-              except:
-                  pass
-              return False
+          # ASN → IP-Mapping für Spamhaus-Check aufbauen
+          asn_to_ips = defaultdict(list)
+          for ip in sample:
+              data = fetch_json(f"https://api.iptoasn.com/v1/as/ip/{ip}", timeout=5)
+              if data:
+                  asn = str(data.get("as_number", 0))
+                  if asn and asn != "0":
+                      asn_to_ips[asn].append(ip)
 
           asn_scores = {}
           for asn, count in asn_ip_count.items():
               score = count * 10
               meta  = asn_meta.get(asn, {})
 
-              # Land-Bonus
               if meta.get("country") in HIGH_RISK_COUNTRIES:
                   score += 5
 
-              # Spamhaus-Check: Prüfe ob einer der IPs in DROP-CIDRs fällt
-              # (Vereinfachung: wir prüfen die ersten 5 IPs dieses ASN)
-              # Emerging Threats Check - proportional zum ASN-Anteil
+              # Spamhaus DROP-Check: tatsächlich berechnet
+              drop_hits = sum(1 for ip in asn_to_ips[asn][:5] if ip_in_cidrs(ip, drop_cidrs))
+              if drop_hits > 0:
+                  score += 20
+
+              # Emerging Threats Check
               asn_ratio = count / max(len(sample), 1)
               et_hits = int(sum(1 for ip in sample if ip in et_ips) * asn_ratio)
               score += et_hits * 15
 
               asn_scores[asn] = {
-                  "score":   min(score, 1000),
+                  "score":    min(score, 1000),
                   "ip_count": count,
-                  "holder":  meta.get("holder", "Unknown"),
-                  "country": meta.get("country", "??"),
+                  "holder":   meta.get("holder", "Unknown"),
+                  "country":  meta.get("country", "??"),
               }
 
           sorted_asns = sorted(asn_scores.items(), key=lambda x: x[1]["score"], reverse=True)
 
-          # ── Schritt 4: Firewall-Blockliste ausgeben ───────────────────────
           print("\nFirewall-ASN-Blockliste schreiben...")
-
-          # Format: eine ASN pro Zeile (kompatibel mit iptables/nftables/pfSense)
           with open("asn_blocklist_firewall.txt", "w") as f:
               f.write(f"# ASN Reputation Blocklist – NETSHIELD\n")
               f.write(f"# Aktualisiert: {now_str}\n")
@@ -152,16 +147,9 @@ jobs:
                       blocked += 1
               print(f"  {blocked} ASNs mit Score >= 50 gelistet")
 
-          # ── Schritt 5: JSON-Datenbank für andere Workflows ────────────────
           with open("asn_reputation_db.json", "w") as f:
-              json.dump({
-                  "updated": now_str,
-                  "asns": {
-                      asn: data for asn, data in sorted_asns
-                  }
-              }, f, indent=2)
+              json.dump({"updated": now_str, "asns": {asn: data for asn, data in sorted_asns}}, f, indent=2)
 
-          # ── Schritt 6: Report ─────────────────────────────────────────────
           lines = []
           lines.append("# ASN Reputation Scorer – Report")
           lines.append(f"**Aktualisiert:** {now_str}\n")
