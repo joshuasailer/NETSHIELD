@@ -1,4 +1,5 @@
 
+
 <div align="center">
 
 # 🛡️ NETSHIELD
@@ -8,7 +9,7 @@
 ![IPv4](https://img.shields.io/badge/IPv4-254%2C556%20Ranges-blue?style=flat-square)
 ![Länder](https://img.shields.io/badge/L%C3%A4nder-249-green?style=flat-square)
 ![Kontinente](https://img.shields.io/badge/Kontinente-6-orange?style=flat-square)
-![Quellen](https://img.shields.io/badge/Threat--Quellen-69-red?style=flat-square)
+![Quellen](https://img.shields.io/badge/Threat--Quellen-31-red?style=flat-square)
 ![Update](https://img.shields.io/badge/Update-Automatisch-brightgreen?style=flat-square)
 ![Lizenz](https://img.shields.io/badge/Lizenz-Kostenlos-lightgrey?style=flat-square)
 
@@ -90,21 +91,6 @@ https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/countries/{konti
 
 ---
 
-### Watchlist — Niedrige Konfidenz (20–39%)
-
-| Eigenschaft | Wert |
-|---|---|
-| **Inhalt** | Verdächtige IPs mit Konfidenzniveau 20–39% |
-| **Format** | Eine IP pro Zeile |
-| **Update** | Automatisch · Täglich |
-| **Raw Link** | [watchlist_confidence20to39_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/watchlist_confidence20to39_ipv4.txt) |
-
-**Verwendungszweck:** Niedrigkonfidente verdächtige IPs überwachen oder weich blockieren — nützlich für Rate-Limiting, Logging oder strengere Inspektionsregeln.
-
-> ⚠️ **Warnung:** Diese Liste hat eine **hohe Falsch-Positiv-Rate**. Empfohlen nur für **Logging und Monitoring** — nicht für hartes Blockieren.
-
----
-
 ### 🤖 Bot-Detector-Blacklist
 
 | Eigenschaft | Wert |
@@ -124,43 +110,33 @@ https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/countries/{konti
 
 | Eigenschaft | Wert |
 |---|---|
-| **Inhalt** | Aggregierte Bedrohungs-IPs aus **69 Threat-Intelligence-Quellen** |
-| **Format** | Eine IP pro Zeile · sortiert nach Bedrohungs-Score |
+| **Inhalt** | Kreuzvalidierte Bedrohungs-IPs aus **31 Threat-Intelligence-Quellen** |
+| **Format** | Eine IP pro Zeile · sortiert |
 | **Update** | Automatisch · Alle 6 Stunden |
 | **Raw Link** | [combined_threat_blacklist_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/combined_threat_blacklist_ipv4.txt) |
 
-**Inhalt:** Bestätigte Angreifer · Brute-Force-Quellen · SSH-Scanner · DDoS-Quellen · Botnet-IPs · Honeypot-Treffer · Malware-C2-Server · bösartige Rechenzentrum-IPs
+**Inhalt:** Bestätigte Angreifer · Brute-Force-Quellen · SSH-Scanner · DDoS-Quellen · Botnet-IPs · Honeypot-Treffer · Malware-C2-Server
 
-#### 🧠 Intelligentes Score-System
+#### 🔍 Kreuzvalidierungs-Filter
 
-Jede IP erhält einen **Score** basierend darauf, in wie vielen der 69 Quellen sie auftaucht. Die gefährlichsten IPs (höchster Score) stehen ganz oben in der Liste.
+Jede IP wird gegen alle 31 Quellen geprüft. In die finale Liste kommt eine IP nur wenn sie mindestens **eine** dieser Bedingungen erfüllt:
 
-| Score | Bedeutung |
+| Bedingung | Bedeutung |
 |---|---|
-| 1 | IP in 1 Quelle gefunden |
-| 5 | IP in 5 verschiedenen Quellen bestätigt |
-| 20+ | Hochgefährlich — in vielen Feeds gelistet |
+| **2+ Feeds** | IP taucht in mindestens 2 verschiedenen Quellen auf → kreuzvalidiert |
+| **1 hochwertiger Feed** | IP steht in einer besonders zuverlässigen Quelle (Feodo, ThreatFox, ThreatView, DShield, Firehol, Binary Defense usw.) |
 
-#### ⏱️ Automatische Bereinigung (60-Tage-Regel)
+Dadurch werden Falsch-Positive aus kleineren oder unzuverlässigen Quellen automatisch herausgefiltert.
 
-IPs die **60 Tage lang** in keiner Quelle mehr auftauchen werden automatisch aus der Liste entfernt. So bleibt die Liste aktuell und frei von veralteten Einträgen.
+#### 📡 Feed-Quellen (31 gesamt)
 
-#### ⚠️ Hinweis zu Cloud-IPs
-
-Große Cloud-Anbieter wie **Google Cloud (GCP)**, **Amazon AWS** und **Microsoft Azure** stellen ihre IP-Ranges öffentlich vermieten — das bedeutet: dieselbe IP kann heute ein legitimer Dienst sein und morgen ein Angreifer. Viele Threat-Intelligence-Quellen listen solche Cloud-IPs, wenn sie für Angriffe missbraucht wurden.
-
-**Mögliche Falsch-Positive:**
-
-| Anbieter | Beispiel-Range | Hinweis |
-|---|---|---|
-| Google Cloud (GCP) | `34.x.x.x` · `35.x.x.x` | Gemietet — kann legitime Dienste hosten |
-| Amazon AWS | `3.x.x.x` · `52.x.x.x` | Gemietet — kann legitime Dienste hosten |
-| Microsoft Azure | `20.x.x.x` · `40.x.x.x` | Gemietet — kann legitime Dienste hosten |
-| DigitalOcean | `157.x.x.x` · `167.x.x.x` | Gemietet — kann legitime Dienste hosten |
-
-> 💡 **Empfehlung:** Vor dem Einsatz auf Produktiv-Firewalls eine **Whitelist-Prüfung** durchführen. Falls du Cloud-Dienste (z.B. Google Workspace, Microsoft 365, AWS S3) aktiv nutzt, stelle sicher dass deren IP-Ranges nicht geblockt werden. Die offizielle IP-Liste der jeweiligen Anbieter findest du bei Google, AWS und Microsoft in deren Dokumentation.
-
----
+| Kategorie | Quellen |
+|---|---|
+| **C2 / Malware / IOC** | Feodo Tracker · ThreatFox · ThreatView · trcert-malware · Firehol Cybercrime |
+| **Scanner / Brute-Force** | CrowdSec SSH · DShield · CINS Score · Danger Bruteforce · Greensnow · Interserver |
+| **DDoS** | L7 DDoS Signatures · Binary Defense |
+| **Anonymisierung** | Firehol Anonymous · Cloudzy |
+| **Threat-Aggregatoren** | Data-Shield · romainmarcoux (3×) · black-mirror · 4IP Solutions · cyna · bbcan177 · kevinmarx · honeypot-blocklist · nixbear · ufukart · f3csystems · FortiGate Azure · florent banned · edanwong |
 
 #### 🔒 Eingebaute Schutzfilter
 
@@ -176,14 +152,12 @@ Folgende IPs können **nie** in die Liste aufgenommen werden:
 
 | Liste | Intervall | Methode |
 |---|---|---|
-| Alle Länder | Bei Bedarf | GitHub Actions |
+| Alle Länder | Mo + Mi 03:00 UTC | GitHub Actions |
 | Kontinent-Listen | Bei Bedarf | GitHub Actions |
 | Länder-Listen (249) | Bei Bedarf | GitHub Actions |
 | Blacklist/Watchlist | Täglich | GitHub Actions |
 | Bot-Detector-Blacklist | Alle 3 Stunden | GitHub Actions |
-| Combined Threat Blacklist | Alle 6 Stunden | GitHub Actions + Cache |
-
-Die **threat_db.json** (interne Datenbank für Score-System und Zeitstempel) wird über **GitHub Actions Cache** gespeichert — nicht im Repository. Dadurch bleibt das Repo schlank, während das Score-System über alle Runs hinweg funktioniert.
+| Combined Threat Blacklist | Alle 6 Stunden | GitHub Actions |
 
 ---
 
