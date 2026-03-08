@@ -1,1 +1,27 @@
-{}
+{
+  "auto_https_raw_githubusercontent_com_firehol_blocklist_ipsets_master_cleantalk_new_ip": {
+    "url": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/cleantalk_new.ipset",
+    "last_good": "2026-03-08",
+    "last_count": 250
+  },
+  "auto_https_raw_githubusercontent_com_firehol_blocklist_ipsets_master_iblocklist_isp_q": {
+    "url": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/iblocklist_isp_qwest.netset",
+    "last_good": "2026-03-08",
+    "last_count": 73
+  },
+  "auto_https_raw_githubusercontent_com_firehol_blocklist_ipsets_master_iblocklist_isp_t": {
+    "url": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/iblocklist_isp_twc.netset",
+    "last_good": "2026-03-08",
+    "last_count": 56
+  },
+  "auto_https_raw_githubusercontent_com_montysecurity_c2_tracker_main_data_hak5_20cloud_": {
+    "url": "https://raw.githubusercontent.com/montysecurity/C2-Tracker/main/data/Hak5%20Cloud%20C2%20IPs.txt",
+    "last_good": "2026-03-08",
+    "last_count": 98
+  },
+  "auto_https_raw_githubusercontent_com_montysecurity_c2_tracker_main_data_viper_20c2_20": {
+    "url": "https://raw.githubusercontent.com/montysecurity/C2-Tracker/main/data/Viper%20C2%20IPs.txt",
+    "last_good": "2026-03-08",
+    "last_count": 254
+  }
+}
