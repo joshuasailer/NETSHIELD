@@ -33,6 +33,7 @@ Automatically updated via PowerShell — free to use, no attribution required.
 - **Source:** [AbuseIPDB](https://www.abuseipdb.com)
 - **Update:** Automatic (daily)
 - **Use Case:** Monitor or soft-block low-confidence suspicious IPs — useful for rate limiting, logging, or stricter inspection rules.
+- **⚠️ Warning:** This list has a **high false positive rate**. Many IPs in this range may be legitimate users, shared hosting, or dynamic IPs that were temporarily flagged. Use with caution — recommended for logging/monitoring only, not for hard blocking.
 
 ---
 
