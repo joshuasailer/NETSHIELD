@@ -2,8 +2,9 @@ name: Update Combined Threat Blacklist (AI IPv4)
 
 on:
   schedule:
-    - cron: '0 */6 * * *'   # alle 6 Stunden
-    - cron: '20 2 * * 0'    # sonntags extra Lern-/Discovery-Lauf
+    - cron: '0 * * * *'      # stündlich (Einlernphase: erste 3 Tage)
+    - cron: '0 */6 * * *'    # alle 6 Stunden (Normalbetrieb)
+    - cron: '20 2 * * 0'     # sonntags extra Lern-/Discovery-Lauf
   workflow_dispatch:
 
 permissions:
@@ -266,15 +267,29 @@ jobs:
                   discovered_state = {}
 
           db = {}
+          db_first_run_date = None
           if os.path.exists(DB_FILE):
               try:
                   with open(DB_FILE, "r", encoding="utf-8") as f:
-                      db = json.load(f)
+                      raw = json.load(f)
+                  # Metadaten-Eintrag für Einlernphase
+                  db_first_run_date = raw.pop("__first_run__", None)
+                  db = raw
                   print(f"Threat-DB geladen: {len(db)} IPs")
               except Exception:
                   db = {}
           else:
               print("Keine Threat-DB gefunden, starte neu.")
+
+          if db_first_run_date is None:
+              db_first_run_date = now_day
+          first_run_dt = datetime.strptime(db_first_run_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+          db_age_days = (now - first_run_dt).days
+          LEARNING_MODE = db_age_days < 3
+          # Im Einlernmodus: Scores werden mit Faktor 3 multipliziert damit
+          # IPs die in vielen Feeds stehen sofort die Blacklist-Schwelle erreichen
+          SCORE_MULTIPLIER = 3 if LEARNING_MODE else 1
+          print(f"DB-Alter: {db_age_days} Tage | Einlernmodus: {LEARNING_MODE} | Score-Multiplikator: {SCORE_MULTIPLIER}x")
 
           discovered_urls = set()
           for page_url in DISCOVERY_PAGES:
@@ -338,7 +353,7 @@ jobs:
                       })
 
                       item["last_seen"] = now_day
-                      item["score"] += weight
+                      item["score"] += weight * SCORE_MULTIPLIER
                       item["feed_count"] += 1
                       if weight >= 7:
                           item["strong_feeds"] += 1
@@ -522,7 +537,9 @@ jobs:
           datacenter_watchlist = sorted(set(datacenter_watchlist), key=lambda ip: (-db[ip]["last_probability"], -db[ip]["score"], ip))
 
           with open(DB_FILE, "w", encoding="utf-8") as f:
+              db["__first_run__"] = db_first_run_date
               json.dump(db, f, separators=(",", ":"), ensure_ascii=False)
+              db.pop("__first_run__", None)  # aus dem Live-Dict wieder entfernen
 
           with open("combined_threat_blacklist_ipv4.txt", "w", encoding="utf-8") as f:
               f.write("# Combined Threat Blacklist (IPv4)\n")
