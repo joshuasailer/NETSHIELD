@@ -1,9 +1,8 @@
-
 name: Firewall Format Exporter
 
 on:
   schedule:
-    - cron: '45 */6 * * *'  # nach dem Blacklist-Workflow
+    - cron: '30 0,6,12,18 * * *'  # 30 Min nach combined-blacklist (0:00, 6:00, 12:00, 18:00)
   workflow_dispatch:
 
 permissions:
@@ -41,6 +40,10 @@ jobs:
                   line = line.strip()
                   if line and not line.startswith("#"):
                       ips.append(line)
+
+          if len(ips) == 0:
+              print("WARNUNG: Blacklist ist leer – Export wird übersprungen.")
+              exit(0)
 
           print(f"Blacklist geladen: {len(ips)} IPs")
           os.makedirs("firewall_exports", exist_ok=True)

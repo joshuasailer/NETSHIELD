@@ -1,0 +1,139 @@
+name: Update Confidence Blacklist (≥40%)
+
+on:
+  schedule:
+    - cron: '15 0,6,12,18 * * *'  # 15 Min nach combined-blacklist (0:00, 6:00, 12:00, 18:00)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-confidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Build Confidence-40 Blacklist from seen_db
+        run: |
+          python3 << 'EOF'
+          import json
+          import os
+          import re
+          from datetime import datetime, timezone, timedelta
+
+          now     = datetime.now(timezone.utc)
+          now_str = now.strftime("%Y-%m-%d %H:%M UTC")
+
+          DB_FILE    = "seen_db.json"
+          BLACKLIST  = "combined_threat_blacklist_ipv4.txt"
+          OUT_FILE   = "blacklist_confidence40_ipv4.txt"
+          WATCH_FILE = "watchlist_confidence20to39_ipv4.txt"
+
+          # ── seen_db laden ─────────────────────────────────────────────────
+          if not os.path.exists(DB_FILE):
+              print(f"FEHLER: {DB_FILE} nicht gefunden – bitte zuerst update_combined_blacklist ausführen.")
+              exit(1)
+
+          with open(DB_FILE) as f:
+              db = json.load(f)
+          print(f"seen_db geladen: {len(db)} IPs")
+
+          # ── Combined Blacklist laden (Wahrheitsquelle) ────────────────────
+          if not os.path.exists(BLACKLIST):
+              print(f"FEHLER: {BLACKLIST} nicht gefunden!")
+              exit(1)
+
+          with open(BLACKLIST) as f:
+              combined_ips = {l.strip() for l in f if l.strip() and not l.startswith("#")}
+          print(f"Combined Blacklist: {len(combined_ips)} IPs")
+
+          # ── Konfidenz berechnen ───────────────────────────────────────────
+          # Konfidenz-Score Logik:
+          #   - HQ-Feed (Feodo, ThreatFox, DShield usw.) = Basis 60%
+          #   - Nicht-HQ aber 2+ Feeds = Basis 40%
+          #   - Aktiv in letzten 7 Tagen  = +20%
+          #   - Aktiv in letzten 30 Tagen = +10%
+          #   - Länger als 14 Tage bekannt = +10%
+          #   - Länger als 30 Tage bekannt = +10%
+
+          confidence40 = []  # >= 40%
+          confidence20 = []  # 20-39%
+
+          for ip, data in db.items():
+              if ip not in combined_ips:
+                  continue  # Nur IPs die aktuell in der Blacklist stehen
+
+              is_hq     = data.get("hq", False)
+              last_seen = data.get("last", "2000-01-01")
+              first_seen = data.get("first", last_seen)
+
+              try:
+                  last_dt  = datetime.strptime(last_seen,  "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                  first_dt = datetime.strptime(first_seen, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+              except:
+                  continue
+
+              days_since_last = (now - last_dt).days
+              days_known      = (last_dt - first_dt).days + 1
+
+              # Basis-Konfidenz
+              conf = 60 if is_hq else 40
+
+              # Aktualitäts-Bonus
+              if days_since_last <= 7:
+                  conf += 20
+              elif days_since_last <= 30:
+                  conf += 10
+
+              # Persistenz-Bonus
+              if days_known >= 30:
+                  conf += 10
+              elif days_known >= 14:
+                  conf += 5
+
+              conf = min(conf, 100)
+
+              if conf >= 40:
+                  confidence40.append((ip, conf))
+              elif conf >= 20:
+                  confidence20.append((ip, conf))
+
+          # Sortieren: höchste Konfidenz zuerst, dann IP
+          confidence40.sort(key=lambda x: (-x[1], x[0]))
+          confidence20.sort(key=lambda x: (-x[1], x[0]))
+
+          print(f"Konfidenz ≥40%: {len(confidence40)} IPs")
+          print(f"Konfidenz 20-39%: {len(confidence20)} IPs")
+
+          # ── Ausgabe: blacklist_confidence40_ipv4.txt ──────────────────────
+          with open(OUT_FILE, "w") as f:
+              f.write(f"# NETSHIELD Blacklist – Hohe Konfidenz (≥40%)\n")
+              f.write(f"# Aktualisiert: {now_str}\n")
+              f.write(f"# Eintraege: {len(confidence40)}\n")
+              f.write(f"# Kriterien: HQ-Feed ODER 2+ Feeds + Aktualitäts/Persistenz-Score\n\n")
+              for ip, conf in confidence40:
+                  f.write(f"{ip}\n")
+          print(f"✅ {OUT_FILE}: {len(confidence40)} IPs geschrieben")
+
+          # ── Ausgabe: watchlist_confidence20to39_ipv4.txt ──────────────────
+          with open(WATCH_FILE, "w") as f:
+              f.write(f"# NETSHIELD Watchlist – Mittlere Konfidenz (20-39%)\n")
+              f.write(f"# Aktualisiert: {now_str}\n")
+              f.write(f"# Eintraege: {len(confidence20)}\n")
+              f.write(f"# Beobachten, noch nicht blockieren\n\n")
+              for ip, conf in confidence20:
+                  f.write(f"{ip}\n")
+          print(f"✅ {WATCH_FILE}: {len(confidence20)} IPs geschrieben")
+          EOF
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add blacklist_confidence40_ipv4.txt watchlist_confidence20to39_ipv4.txt
+          git diff --staged --quiet || git commit -m "Confidence Blacklist aktualisiert [$(date -u '+%Y-%m-%d %H:%M') UTC]"
+          git push

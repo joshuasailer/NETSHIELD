@@ -38,6 +38,7 @@ jobs:
                   print(f"  FEHLER {url}: {e}")
                   return None
 
+          # ── Mehrere Tor-Exit-Quellen für maximale Abdeckung ───────────────
           TOR_SOURCES = {
               "TorProject (offiziell)":
                   "https://check.torproject.org/torbulkexitlist",
@@ -60,6 +61,7 @@ jobs:
               text = fetch(url)
               if text:
                   ips = set(IP_RE.findall(text))
+                  # Private IPs rausfiltern
                   ips = {ip for ip in ips if not (
                       ip.startswith("10.") or ip.startswith("192.168.") or
                       ip.startswith("127.") or ip.startswith("172.") or
@@ -73,6 +75,7 @@ jobs:
 
           print(f"\nGesamt einzigartige Tor-Exit-IPs: {len(all_tor_ips)}")
 
+          # ── Bestehende Tor-Liste laden & mergen ───────────────────────────
           TOR_FILE = "tor_exit_nodes.txt"
           existing = set()
           if os.path.exists(TOR_FILE):
@@ -81,7 +84,7 @@ jobs:
               print(f"Bestehende Einträge: {len(existing)}")
 
           new_ips     = all_tor_ips - existing
-          removed_ips = existing    - all_tor_ips
+          removed_ips = existing    - all_tor_ips  # nicht mehr aktive Exit-Nodes
           final_ips   = sorted(all_tor_ips, key=lambda ip: tuple(int(o) for o in ip.split(".")))
 
           with open(TOR_FILE, "w") as f:
@@ -94,6 +97,11 @@ jobs:
 
           print(f"tor_exit_nodes.txt: {len(final_ips)} IPs | +{len(new_ips)} neu | -{len(removed_ips)} entfernt")
 
+          # Tor-IPs werden NICHT direkt in combined_threat_blacklist_ipv4.txt geschrieben.
+          # Der combined-blacklist-Workflow liest tor_exit_nodes.txt als Feed-Quelle ein.
+          print(f"tor_exit_nodes.txt fertig – wird vom combined-blacklist-Workflow eingelesen.")
+
+          # ── Report ────────────────────────────────────────────────────────
           lines = []
           lines.append("# Tor Exit Node Monitor – Report")
           lines.append(f"**Aktualisiert:** {now_str}\n")
@@ -102,8 +110,8 @@ jobs:
           lines.append("| Quelle | IPs |")
           lines.append("|---|---|")
           for name, count in source_stats.items():
-              st = "✅" if count > 0 else "❌"
-              lines.append(f"| {st} {name} | {count} |")
+              status = "✅" if count > 0 else "❌"
+              lines.append(f"| {status} {name} | {count} |")
           lines.append("")
           lines.append("---")
           lines.append("## Statistik\n")
@@ -123,6 +131,7 @@ jobs:
 
           with open("tor_exit_report.md", "w") as f:
               f.write("\n".join(lines))
+          print("tor_exit_report.md geschrieben")
           EOF
 
       - name: Commit
