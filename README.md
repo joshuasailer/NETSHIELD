@@ -1,4 +1,4 @@
-[Uploading README.md…]()
+
 # 🛡️ NETSHIELD — IPv4 Blocklist Suite
 
 Complete IPv4 threat intelligence feed for firewalls, OPNsense, pfSense, and FortiGate.  
