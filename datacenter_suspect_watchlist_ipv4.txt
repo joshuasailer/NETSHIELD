@@ -1,5 +1,6 @@
 # Datacenter/Cloud Suspect Watchlist (IPv4)
-# Aktualisiert: 2026-03-08 17:46 UTC
+# Aktualisiert: 2026-03-08 18:25 UTC
 # Nicht fuer LAN-Auto-Block vorgesehen
-# Eintraege: 0
+# Eintraege: 1
 
+3.89.5.139

@@ -1,11 +1,11 @@
 # Combined Threat Blacklist Report
 
-- Aktualisiert: **2026-03-08 17:46 UTC**
+- Aktualisiert: **2026-03-08 18:25 UTC**
 - Feeds gesamt: **186**
 - Discovery-Feeds aktiv: **5**
-- Blacklist: **0** IPv4
-- Watchlist: **678** IPv4
-- Datacenter/Cloud-Watchlist: **0** IPv4
+- Blacklist: **881** IPv4
+- Watchlist: **371** IPv4
+- Datacenter/Cloud-Watchlist: **1** IPv4
 - Abgelaufen entfernt: **0**
 
 ## Top Feed-Statistik
