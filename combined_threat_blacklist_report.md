@@ -1,8 +1,8 @@
 # Combined Threat Blacklist Report
 
-- Aktualisiert: **2026-03-08 19:22 UTC**
-- Feeds gesamt: **34**
-- Eintraege gesamt: **3700653**
+- Aktualisiert: **2026-03-08 19:27 UTC**
+- Feeds gesamt: **31**
+- Eintraege gesamt: **3501973**
 
 ## Feed-Statistik
 
@@ -13,8 +13,6 @@
 | `romainmarcoux_aa` | 300000 |
 | `ufukart_blacklist` | 232508 |
 | `romainmarcoux_ab` | 166950 |
-| `ultimate_hosts` | 148664 |
-| `amitambekar_full` | 139986 |
 | `data_shield` | 85219 |
 | `4ip_high_security` | 71420 |
 | `edanwong` | 40638 |
@@ -26,14 +24,13 @@
 | `feodo_aggressive` | 7607 |
 | `nixbear_malicious` | 5566 |
 | `greensnow` | 4823 |
-| `amitambekar_aa` | 4428 |
 | `cloudzy` | 3578 |
 | `cyna_malicious` | 3376 |
 | `f3csystems` | 3056 |
 | `binary_defense` | 1543 |
 | `bbcan177` | 1383 |
 | `l7_ddos` | 1138 |
-| `interserver` | 965 |
+| `interserver` | 972 |
 | `danger_bruteforce` | 573 |
 | `crowdsec_ssh` | 298 |
 | `honeypot_blocklist` | 276 |
