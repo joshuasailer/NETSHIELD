@@ -2,7 +2,7 @@ name: Firewall Format Exporter
 
 on:
   schedule:
-    - cron: '45 */6 * * *'  # nach dem Blacklist-Workflow
+    - cron: '30 0,6,12,18 * * *'  # 30 Min nach combined-blacklist (0:00, 6:00, 12:00, 18:00)
   workflow_dispatch:
 
 permissions:
@@ -28,7 +28,6 @@ jobs:
           now_str = now.strftime("%Y-%m-%d %H:%M UTC")
           now_iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-          # ── Blacklist laden ───────────────────────────────────────────────
           BLACKLIST = "combined_threat_blacklist_ipv4.txt"
           if not os.path.exists(BLACKLIST):
               print(f"FEHLER: {BLACKLIST} nicht gefunden!")
@@ -41,12 +40,13 @@ jobs:
                   if line and not line.startswith("#"):
                       ips.append(line)
 
+          if len(ips) == 0:
+              print("WARNUNG: Blacklist ist leer – Export wird übersprungen.")
+              exit(0)
+
           print(f"Blacklist geladen: {len(ips)} IPs")
           os.makedirs("firewall_exports", exist_ok=True)
 
-          # ══════════════════════════════════════════════════════════════════
-          # 1. JSON
-          # ══════════════════════════════════════════════════════════════════
           print("Exportiere JSON...")
           with open("firewall_exports/blacklist.json", "w") as f:
               json.dump({
@@ -59,9 +59,6 @@ jobs:
               }, f, indent=2)
           print(f"  OK: blacklist.json ({len(ips)} IPs)")
 
-          # ══════════════════════════════════════════════════════════════════
-          # 2. CSV
-          # ══════════════════════════════════════════════════════════════════
           print("Exportiere CSV...")
           with open("firewall_exports/blacklist.csv", "w") as f:
               f.write("ip,type,source,updated\n")
@@ -69,27 +66,19 @@ jobs:
                   f.write(f"{ip},IPv4,NETSHIELD,{now_str}\n")
           print(f"  OK: blacklist.csv ({len(ips)} Zeilen)")
 
-          # ══════════════════════════════════════════════════════════════════
-          # 3. iptables Shell-Script
-          # ══════════════════════════════════════════════════════════════════
           print("Exportiere iptables...")
           with open("firewall_exports/blacklist_iptables.sh", "w") as f:
               f.write("#!/bin/bash\n")
               f.write(f"# NETSHIELD Blacklist – iptables\n")
               f.write(f"# Aktualisiert: {now_str} | Eintraege: {len(ips)}\n")
               f.write("# Verwendung: sudo bash blacklist_iptables.sh\n\n")
-              f.write("# Bestehende NETSHIELD-Chain leeren\n")
               f.write("iptables -F NETSHIELD 2>/dev/null || iptables -N NETSHIELD\n")
               f.write("iptables -C INPUT -j NETSHIELD 2>/dev/null || iptables -I INPUT -j NETSHIELD\n")
               f.write("iptables -C FORWARD -j NETSHIELD 2>/dev/null || iptables -I FORWARD -j NETSHIELD\n\n")
-              f.write("# Blacklist-Regeln\n")
               for ip in ips:
                   f.write(f"iptables -A NETSHIELD -s {ip} -j DROP\n")
           print(f"  OK: blacklist_iptables.sh ({len(ips)} Regeln)")
 
-          # ══════════════════════════════════════════════════════════════════
-          # 4. nftables
-          # ══════════════════════════════════════════════════════════════════
           print("Exportiere nftables...")
           with open("firewall_exports/blacklist_nftables.conf", "w") as f:
               f.write(f"# NETSHIELD Blacklist – nftables\n")
@@ -100,7 +89,6 @@ jobs:
               f.write("        type ipv4_addr\n")
               f.write("        flags interval\n")
               f.write("        elements = {\n")
-              # nftables: max 65535 Elemente pro Zeile → je 10 IPs
               chunks = [ips[i:i+10] for i in range(0, len(ips), 10)]
               for chunk in chunks:
                   f.write("            " + ", ".join(chunk) + ",\n")
@@ -117,16 +105,13 @@ jobs:
               f.write("}\n")
           print(f"  OK: blacklist_nftables.conf ({len(ips)} IPs)")
 
-          # ══════════════════════════════════════════════════════════════════
-          # 5. pfSense / OPNsense Alias (XML)
-          # ══════════════════════════════════════════════════════════════════
           print("Exportiere pfSense/OPNsense...")
           with open("firewall_exports/blacklist_pfsense_opnsense.xml", "w") as f:
               f.write('<?xml version="1.0"?>\n')
               f.write(f'<!-- NETSHIELD Blacklist | Aktualisiert: {now_str} -->\n')
               f.write('<aliases>\n')
               f.write('  <alias>\n')
-              f.write('    <name>NETSHIELD_Blacklist</name>\n')
+              f.write('    <n>NETSHIELD_Blacklist</n>\n')
               f.write('    <type>host</type>\n')
               f.write(f'    <description>NETSHIELD Combined Threat Blacklist – {now_str}</description>\n')
               f.write('    <address>')
@@ -139,51 +124,36 @@ jobs:
               f.write('</aliases>\n')
           print(f"  OK: blacklist_pfsense_opnsense.xml ({len(ips)} IPs)")
 
-          # ══════════════════════════════════════════════════════════════════
-          # 6. Cisco ACL
-          # ══════════════════════════════════════════════════════════════════
           print("Exportiere Cisco ACL...")
           with open("firewall_exports/blacklist_cisco_acl.txt", "w") as f:
               f.write(f"! NETSHIELD Blacklist – Cisco ACL Format\n")
               f.write(f"! Aktualisiert: {now_str}\n")
-              f.write(f"! Eintraege: {len(ips)}\n")
-              f.write("!\n")
+              f.write(f"! Eintraege: {len(ips)}\n!\n")
               f.write("ip access-list extended NETSHIELD_BLACKLIST\n")
               for ip in ips:
                   f.write(f" deny   ip host {ip} any log\n")
               f.write(" permit ip any any\n")
           print(f"  OK: blacklist_cisco_acl.txt ({len(ips)} Eintraege)")
 
-          # ══════════════════════════════════════════════════════════════════
-          # 7. Mikrotik Address-List (RouterOS Script)
-          # ══════════════════════════════════════════════════════════════════
           print("Exportiere Mikrotik RouterOS...")
           with open("firewall_exports/blacklist_mikrotik.rsc", "w") as f:
               f.write(f"# NETSHIELD Blacklist – Mikrotik RouterOS\n")
               f.write(f"# Aktualisiert: {now_str}\n")
               f.write(f"# Eintraege: {len(ips)}\n")
               f.write("# Import: /import file=blacklist_mikrotik.rsc\n\n")
-              f.write("# Bestehende Liste leeren\n")
               f.write("/ip firewall address-list remove [find list=NETSHIELD_Blacklist]\n\n")
-              f.write("# Neue Eintraege hinzufuegen\n")
               for ip in ips:
                   f.write(f"/ip firewall address-list add list=NETSHIELD_Blacklist address={ip} comment=\"NETSHIELD\"\n")
           print(f"  OK: blacklist_mikrotik.rsc ({len(ips)} Eintraege)")
 
-          # ══════════════════════════════════════════════════════════════════
-          # 8. Windows Firewall (PowerShell)
-          # ══════════════════════════════════════════════════════════════════
           print("Exportiere Windows Firewall PowerShell...")
           with open("firewall_exports/blacklist_windows_firewall.ps1", "w") as f:
               f.write("# NETSHIELD Blacklist – Windows Firewall (PowerShell)\n")
               f.write(f"# Aktualisiert: {now_str}\n")
               f.write(f"# Eintraege: {len(ips)}\n")
               f.write("# Ausfuehren als Administrator: .\\blacklist_windows_firewall.ps1\n\n")
-              f.write("# Bestehende NETSHIELD-Regel entfernen\n")
               f.write('Remove-NetFirewallRule -DisplayName "NETSHIELD_Blacklist" -ErrorAction SilentlyContinue\n\n')
-              f.write("# Alle IPs als einzelne Blockliste hinzufuegen\n")
               f.write("$ips = @(\n")
-              # PowerShell Array in Chunks
               chunks = [ips[i:i+10] for i in range(0, len(ips), 10)]
               for chunk in chunks:
                   f.write('    "' + '","'.join(chunk) + '",\n')
@@ -197,17 +167,12 @@ jobs:
               f.write('Write-Host "NETSHIELD Blacklist geladen: $($ips.Count) IPs geblockt"\n')
           print(f"  OK: blacklist_windows_firewall.ps1 ({len(ips)} IPs)")
 
-          # ══════════════════════════════════════════════════════════════════
-          # README für den exports-Ordner
-          # ══════════════════════════════════════════════════════════════════
           with open("firewall_exports/README.md", "w") as f:
               f.write("# NETSHIELD Firewall Exports\n\n")
               f.write(f"**Aktualisiert:** {now_str}  \n")
-              f.write(f"**IPs gesamt:** {len(ips)}\n\n")
-              f.write("---\n\n")
+              f.write(f"**IPs gesamt:** {len(ips)}\n\n---\n\n")
               f.write("## Verfügbare Formate\n\n")
-              f.write("| Datei | Format | Verwendung |\n")
-              f.write("|---|---|---|\n")
+              f.write("| Datei | Format | Verwendung |\n|---|---|---|\n")
               f.write("| `blacklist.json` | JSON | APIs, Skripte, SIEM-Systeme |\n")
               f.write("| `blacklist.csv` | CSV | Excel, Datenbanken, universell |\n")
               f.write("| `blacklist_iptables.sh` | iptables | Linux (Ubuntu, Debian, CentOS) |\n")
@@ -215,15 +180,13 @@ jobs:
               f.write("| `blacklist_pfsense_opnsense.xml` | XML Alias | pfSense / OPNsense Import |\n")
               f.write("| `blacklist_cisco_acl.txt` | Cisco ACL | Cisco IOS / IOS-XE Router |\n")
               f.write("| `blacklist_mikrotik.rsc` | RouterOS | Mikrotik Router |\n")
-              f.write("| `blacklist_windows_firewall.ps1` | PowerShell | Windows Server / Desktop |\n\n")
-              f.write("---\n\n")
+              f.write("| `blacklist_windows_firewall.ps1` | PowerShell | Windows Server / Desktop |\n\n---\n\n")
               f.write("## Schnellstart\n\n")
               f.write("**Linux iptables:**\n```bash\nsudo bash blacklist_iptables.sh\n```\n\n")
               f.write("**Linux nftables:**\n```bash\nsudo nft -f blacklist_nftables.conf\n```\n\n")
               f.write("**OPNsense/pfSense:**  \nFirewall → Aliases → Import → `blacklist_pfsense_opnsense.xml`\n\n")
               f.write("**Mikrotik:**\n```\n/import file=blacklist_mikrotik.rsc\n```\n\n")
-              f.write("**Windows (Admin PowerShell):**\n```powershell\n.\\blacklist_windows_firewall.ps1\n```\n\n")
-              f.write("---\n")
+              f.write("**Windows (Admin PowerShell):**\n```powershell\n.\\blacklist_windows_firewall.ps1\n```\n\n---\n")
               f.write(f"*Automatisch generiert von NETSHIELD Firewall Format Exporter · {now_str}*\n")
 
           print(f"\nAlle Exporte fertig in: firewall_exports/")
