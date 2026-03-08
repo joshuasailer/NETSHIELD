@@ -25,7 +25,6 @@ jobs:
 
           now     = datetime.now(timezone.utc)
           now_str = now.strftime("%Y-%m-%d %H:%M UTC")
-          IP_RE   = re.compile(r'\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b')
 
           # ── Dateien definieren ─────────────────────────────────────────────
           # combined_threat_blacklist_ipv4.txt ist die "Mutter" – alle anderen
@@ -41,8 +40,11 @@ jobs:
               "botdet":    "bot_detector_blacklist_ipv4.txt",
           }
 
+          # Regex: reine IPs UND CIDRs (z.B. 1.2.3.4 oder 1.2.3.0/24)
+          ENTRY_RE = re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(?:/\d{1,2})?$')
+
           def load_ips(filepath):
-              """Lädt IPs aus einer Datei, gibt (set, raw_lines) zurück."""
+              """Lädt IPs und CIDRs aus einer Datei, gibt (set, raw_lines) zurück."""
               if not os.path.exists(filepath):
                   return set(), []
               with open(filepath) as f:
@@ -51,8 +53,7 @@ jobs:
               for line in raw:
                   stripped = line.strip()
                   if stripped and not stripped.startswith("#"):
-                      # Nur reine IPs (keine CIDRs) für Duplikat-Check
-                      if re.fullmatch(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', stripped):
+                      if ENTRY_RE.match(stripped):
                           ips.add(stripped)
               return ips, raw
 
@@ -132,6 +133,9 @@ jobs:
 
               removal_stats[key] = removed
               total_removed += removed
+              # Count nach Bereinigung aktualisieren (für korrekten Report)
+              if removed > 0:
+                  data[key]["count"] = data[key]["count"] - removed
 
           # ── Report ────────────────────────────────────────────────────────
           lines = []
