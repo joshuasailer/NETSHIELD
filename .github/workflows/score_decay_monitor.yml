@@ -16,13 +16,13 @@ jobs:
         with:
           persist-credentials: true
 
-      - name: Cache threat_db.json
+      - name: Cache seen_db.json
         uses: actions/cache@v4
         with:
-          path: threat_db.json
-          key: threat-ai-cache-${{ github.run_id }}
+          path: seen_db.json
+          key: netshield-seen-db-${{ github.run_id }}
           restore-keys: |
-            threat-ai-cache-
+            netshield-seen-db-
 
       - name: Run Score Decay Monitor
         run: |
@@ -36,20 +36,20 @@ jobs:
           now = datetime.now(timezone.utc)
           now_str = now.strftime("%Y-%m-%d %H:%M UTC")
 
-          # ── threat_db.json laden ──────────────────────────────────────────
-          DB_FILE = "threat_db.json"
+          # ── seen_db.json laden ──────────────────────────────────────────
+          DB_FILE = "seen_db.json"
           if not os.path.exists(DB_FILE):
-              print("FEHLER: threat_db.json nicht gefunden (läuft nur nach Blacklist-Workflow)")
+              print("FEHLER: seen_db.json nicht gefunden (läuft nur nach Blacklist-Workflow)")
               # Leeren Report schreiben
               with open("score_decay_report.md", "w") as f:
                   f.write("# Score Decay Monitor\n\n")
-                  f.write("*threat_db.json nicht gefunden – bitte zuerst Update Combined Threat Blacklist ausführen.*\n")
+                  f.write("*seen_db.json nicht gefunden – bitte zuerst Update Combined Threat Blacklist ausführen.*\n")
               exit(0)
 
           with open(DB_FILE) as f:
               db = json.load(f)
 
-          print(f"threat_db.json geladen: {len(db)} IPs")
+          print(f"seen_db.json geladen: {len(db)} IPs")
 
           # ── Decay-Analyse ─────────────────────────────────────────────────
           # Schwellenwerte
