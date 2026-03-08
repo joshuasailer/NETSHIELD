@@ -1,0 +1,218 @@
+name: False Positive Checker
+
+on:
+  schedule:
+    - cron: '0 5 * * 0'  # wöchentlich Sonntag 05:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fp-checker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Check Blacklist for False Positives
+        run: |
+          python3 << 'EOF'
+          import urllib.request
+          import re
+          import os
+          import ipaddress
+          import socket
+          import time
+          from datetime import datetime, timezone
+
+          now = datetime.now(timezone.utc)
+          now_str = now.strftime("%Y-%m-%d %H:%M UTC")
+          IP_RE = re.compile(r'\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b')
+
+          def fetch(url, timeout=30):
+              try:
+                  req = urllib.request.Request(url, headers={"User-Agent": "NETSHIELD-FPChecker/1.0"})
+                  with urllib.request.urlopen(req, timeout=timeout) as r:
+                      return r.read().decode("utf-8", errors="ignore")
+              except Exception as e:
+                  print(f"  FEHLER: {e}")
+                  return None
+
+          # ── Tranco Top-1M laden (legitime Domains → IPs) ─────────────────
+          print("Tranco Top-1M laden...")
+          tranco_text = fetch("https://tranco-list.eu/top-1m.csv.zip")
+          # Fallback: rohe Liste
+          if not tranco_text:
+              tranco_text = fetch("https://raw.githubusercontent.com/nicksyostudy/tranco/main/tranco.csv")
+
+          # Einfachere Alternative: Alexa via Majestic
+          print("Majestic Million (Top-Domains) laden...")
+          majestic_text = fetch("https://downloads.majestic.com/majestic_million.csv")
+
+          legitimate_domains = set()
+          if majestic_text:
+              for line in majestic_text.splitlines()[1:10001]:  # Top 10k
+                  parts = line.split(",")
+                  if len(parts) >= 3:
+                      domain = parts[2].strip().lower()
+                      if domain:
+                          legitimate_domains.add(domain)
+              print(f"  {len(legitimate_domains)} legitime Domains geladen")
+
+          # ── Bekannte legitime IP-Ranges (Whitelist) ───────────────────────
+          WHITELIST_CIDRS = [
+              # Google
+              "8.8.8.0/24", "8.8.4.0/24", "8.34.208.0/20", "8.35.192.0/20",
+              "34.0.0.0/9", "35.184.0.0/13",
+              # Cloudflare
+              "1.1.1.0/24", "1.0.0.0/24", "104.16.0.0/13", "104.24.0.0/14",
+              "172.64.0.0/13", "162.158.0.0/15", "198.41.128.0/17",
+              # Microsoft/Azure
+              "13.64.0.0/11", "13.96.0.0/13", "40.64.0.0/10",
+              # Amazon AWS (öffentliche Dienste)
+              "54.239.28.0/23", "54.239.192.0/19",
+              # Akamai CDN
+              "23.0.0.0/12", "23.32.0.0/11",
+              # Fastly CDN
+              "151.101.0.0/16",
+          ]
+
+          whitelist_networks = []
+          for cidr in WHITELIST_CIDRS:
+              try:
+                  whitelist_networks.append(ipaddress.ip_network(cidr, strict=False))
+              except:
+                  pass
+
+          def is_whitelisted(ip):
+              try:
+                  addr = ipaddress.ip_address(ip)
+                  return any(addr in net for net in whitelist_networks)
+              except:
+                  return False
+
+          # ── Blacklist laden ───────────────────────────────────────────────
+          BLACKLIST = "combined_threat_blacklist_ipv4.txt"
+          if not os.path.exists(BLACKLIST):
+              print(f"FEHLER: {BLACKLIST} nicht gefunden!")
+              exit(1)
+
+          with open(BLACKLIST) as f:
+              lines_raw = f.readlines()
+
+          blacklist_ips = []
+          for line in lines_raw:
+              ip = line.strip()
+              if ip and not ip.startswith("#"):
+                  blacklist_ips.append(ip)
+
+          print(f"\nBlacklist geladen: {len(blacklist_ips)} IPs")
+          print("Prüfe auf False Positives...")
+
+          # ── False-Positive-Erkennung ──────────────────────────────────────
+          false_positives     = []
+          whitelist_hits      = []
+          reverse_dns_legit   = []
+
+          for i, ip in enumerate(blacklist_ips[:500]):  # Top-500 prüfen
+              if i % 100 == 0:
+                  print(f"  {i}/500...")
+
+              # Whitelist-Check
+              if is_whitelisted(ip):
+                  whitelist_hits.append((ip, "Bekannte legitime IP-Range (CDN/Cloud)"))
+                  false_positives.append(ip)
+                  continue
+
+              # Reverse-DNS-Check (legitime Domains)
+              time.sleep(0.05)
+              try:
+                  hostname, _, _ = socket.gethostbyaddr(ip)
+                  hostname = hostname.lower()
+                  # Prüfen ob Hostname zu legitimer Domain gehört
+                  for domain in ["google.com", "cloudflare.com", "akamai.com",
+                                  "fastly.net", "amazonaws.com", "microsoft.com",
+                                  "apple.com", "facebook.com", "twitter.com",
+                                  "youtube.com", "netflix.com", "cdn77.com",
+                                  "edgecastcdn.net", "incapsula.com"]:
+                      if domain in hostname:
+                          reverse_dns_legit.append((ip, hostname))
+                          false_positives.append(ip)
+                          break
+              except:
+                  pass  # Kein Reverse-DNS = normal für Abuse-IPs
+
+          print(f"\nFalse Positives gefunden: {len(false_positives)}")
+          print(f"  Whitelist-Treffer:    {len(whitelist_hits)}")
+          print(f"  Reverse-DNS-Legit:    {len(reverse_dns_legit)}")
+
+          # ── False Positives aus Blacklist entfernen ───────────────────────
+          fp_set = set(false_positives)
+          cleaned_lines = []
+          removed_count = 0
+
+          for line in lines_raw:
+              ip = line.strip()
+              if ip and not ip.startswith("#") and ip in fp_set:
+                  removed_count += 1
+                  continue  # rauslassen
+              cleaned_lines.append(line)
+
+          if removed_count > 0:
+              with open(BLACKLIST, "w") as f:
+                  f.writelines(cleaned_lines)
+              print(f"Blacklist bereinigt: {removed_count} False Positives entfernt")
+          else:
+              print("Keine False Positives in den Top-500 gefunden")
+
+          # ── False Positive Liste speichern ────────────────────────────────
+          with open("false_positives_log.txt", "a") as f:
+              f.write(f"\n# Scan: {now_str} – {removed_count} entfernt\n")
+              for ip in false_positives:
+                  f.write(f"{ip}\n")
+
+          # ── Report ────────────────────────────────────────────────────────
+          lines = []
+          lines.append("# False Positive Checker – Report")
+          lines.append(f"**Aktualisiert:** {now_str}\n")
+          lines.append("---")
+          lines.append("## Ergebnis\n")
+          lines.append(f"| Metrik | Wert |")
+          lines.append(f"|---|---|")
+          lines.append(f"| Geprüfte IPs (Top 500) | 500 |")
+          lines.append(f"| Whitelist-Treffer | **{len(whitelist_hits)}** |")
+          lines.append(f"| Reverse-DNS legitim | **{len(reverse_dns_legit)}** |")
+          lines.append(f"| Gesamt entfernt | **{removed_count}** |")
+
+          if whitelist_hits:
+              lines.append("")
+              lines.append("## Whitelist-Treffer\n")
+              lines.append("| IP | Grund |")
+              lines.append("|---|---|")
+              for ip, reason in whitelist_hits[:20]:
+                  lines.append(f"| `{ip}` | {reason} |")
+
+          if reverse_dns_legit:
+              lines.append("")
+              lines.append("## Legitime Reverse-DNS-Einträge\n")
+              lines.append("| IP | Hostname |")
+              lines.append("|---|---|")
+              for ip, hostname in reverse_dns_legit[:20]:
+                  lines.append(f"| `{ip}` | `{hostname}` |")
+
+          lines.append(f"\n---\n*Generiert: {now_str}*")
+
+          with open("false_positive_report.md", "w") as f:
+              f.write("\n".join(lines))
+          print("false_positive_report.md geschrieben")
+          EOF
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add false_positives_log.txt false_positive_report.md combined_threat_blacklist_ipv4.txt
+          git diff --staged --quiet || git commit -m "False Positive Check abgeschlossen [$(date -u '+%Y-%m-%d %H:%M') UTC]"
+          git push
