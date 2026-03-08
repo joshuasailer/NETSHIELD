@@ -2,8 +2,7 @@ name: NETSHIELD Report Generator
 
 on:
   schedule:
-    - cron: '50 */6 * * *'   # nach combined-blacklist (0h) + exporter (30min)
-    - cron: '50 1,7,13,19 * * *'
+    - cron: '50 0,6,12,18 * * *'  # 50 Min nach combined-blacklist (0:00, 6:00, 12:00, 18:00)
   workflow_dispatch:
 
 permissions:
@@ -28,7 +27,6 @@ jobs:
 
           now     = datetime.now(timezone.utc)
           now_str = now.strftime("%Y-%m-%d %H:%M UTC")
-          IP_RE   = re.compile(r'\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b')
 
           def count_ips(filepath):
               if not os.path.exists(filepath):
@@ -41,17 +39,6 @@ jobs:
                           count += 1
               return count, True
 
-          def read_header(filepath, key):
-              """Liest einen Wert aus dem Header einer Datei z.B. '# Neu: +123'"""
-              if not os.path.exists(filepath):
-                  return "–"
-              with open(filepath) as f:
-                  for line in f:
-                      if key.lower() in line.lower():
-                          nums = re.findall(r'[\+\-]?\d+', line)
-                          return nums[0] if nums else "–"
-              return "–"
-
           def file_mtime(filepath):
               if not os.path.exists(filepath):
                   return None
@@ -61,15 +48,11 @@ jobs:
           def status(filepath):
               return "✅" if os.path.exists(filepath) else "❌"
 
-          # ── Daten einlesen ────────────────────────────────────────────────
-
-          # Blacklist
           bl_count,  bl_ok  = count_ips("combined_threat_blacklist_ipv4.txt")
           tor_count, tor_ok = count_ips("tor_exit_nodes.txt")
           cve_count, cve_ok = count_ips("cve_exploit_ips.txt")
           vpn_count, vpn_ok = count_ips("vpn_proxy_ranges.txt")
 
-          # Geo-Tagger JSON
           top_countries = []
           top_asns      = []
           if os.path.exists("blacklist_geo_enriched.json"):
@@ -89,16 +72,8 @@ jobs:
               top_countries = sorted(cc_count.items(),  key=lambda x: x[1], reverse=True)[:10]
               top_asns      = sorted(asn_count.items(), key=lambda x: x[1]["count"], reverse=True)[:10]
 
-          # Score Decay
           zombie_count = 0
           decay_count  = 0
-          if os.path.exists("score_decay_log.txt"):
-              with open("score_decay_log.txt") as f:
-                  content = f.read()
-              zombie_count = content.count("zombie") + len(re.findall(r'score=\d+.*\(\d+d ago\)', content.split("ZOMBIE")[1] if "ZOMBIE" in content else ""))
-              decay_count  = len(re.findall(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b', content.split("Entfernungsempfehlung")[1] if "Entfernungsempfehlung" in content else ""))
-
-          # Score Decay Report für bessere Zahlen
           if os.path.exists("score_decay_report.md"):
               with open("score_decay_report.md") as f:
                   sd_content = f.read()
@@ -107,7 +82,6 @@ jobs:
               m = re.search(r'Entfernung empfohlen.*?\*\*(\d+)\*\*', sd_content)
               if m: decay_count = int(m.group(1))
 
-          # ── Report bauen ─────────────────────────────────────────────────
           flags = {"CN":"🇨🇳","RU":"🇷🇺","US":"🇺🇸","DE":"🇩🇪","NL":"🇳🇱","FR":"🇫🇷",
                    "GB":"🇬🇧","BR":"🇧🇷","IN":"🇮🇳","KR":"🇰🇷","VN":"🇻🇳","UA":"🇺🇦",
                    "TR":"🇹🇷","ID":"🇮🇩","HK":"🇭🇰","SG":"🇸🇬","JP":"🇯🇵","IR":"🇮🇷",
@@ -118,7 +92,6 @@ jobs:
           lines.append(f"**Aktualisiert:** {now_str}\n")
           lines.append("> Automatisch generierter Sicherheits-Report. Alle Daten stammen aus den NETSHIELD-Workflows.\n")
 
-          # ── Übersicht ─────────────────────────────────────────────────────
           lines.append("---")
           lines.append("## 📊 Übersicht\n")
           lines.append("| Liste | Einträge | Status | Zuletzt aktualisiert |")
@@ -128,7 +101,6 @@ jobs:
           lines.append(f"| 🦠 CVE / Exploit IPs | **{cve_count:,}** | {status('cve_exploit_ips.txt')} | {file_mtime('cve_exploit_ips.txt') or '–'} |")
           lines.append(f"| 🔒 VPN & Proxy Ranges | **{vpn_count:,}** | {status('vpn_proxy_ranges.txt')} | {file_mtime('vpn_proxy_ranges.txt') or '–'} |")
 
-          # ── Workflow-Status ───────────────────────────────────────────────
           lines.append("")
           lines.append("---")
           lines.append("## ⚙️ Workflow-Status\n")
@@ -145,11 +117,10 @@ jobs:
               ("ASN Reputation Scorer",      "asn_reputation_report.md"),
           ]
           for name, report_file in WORKFLOWS:
-              st   = status(report_file)
-              mt   = file_mtime(report_file) or "–"
+              st = status(report_file)
+              mt = file_mtime(report_file) or "–"
               lines.append(f"| {name} | [{st} Report]({report_file}) | {mt} |")
 
-          # ── Score Decay ───────────────────────────────────────────────────
           lines.append("")
           lines.append("---")
           lines.append("## 💀 Score Decay Monitor\n")
@@ -160,7 +131,6 @@ jobs:
           if os.path.exists("score_decay_report.md"):
               lines.append(f"\n→ [Vollständiger Score Decay Report](score_decay_report.md)")
 
-          # ── Top Länder ────────────────────────────────────────────────────
           if top_countries:
               lines.append("")
               lines.append("---")
@@ -173,7 +143,6 @@ jobs:
                   pct  = f"{count/total_geo*100:.1f}%"
                   lines.append(f"| {rank} | {flag} `{cc}` | {count} ({pct}) |")
 
-          # ── Top ASNs ──────────────────────────────────────────────────────
           if top_asns:
               lines.append("")
               lines.append("---")
@@ -183,7 +152,6 @@ jobs:
               for rank, (asn, d) in enumerate(top_asns, 1):
                   lines.append(f"| {rank} | `{asn}` | {d['org'][:40]} | {d['count']} |")
 
-          # ── Footer ────────────────────────────────────────────────────────
           lines.append("")
           lines.append("---")
           lines.append("## 📥 Direkte Download-Links\n")
