@@ -1,4 +1,4 @@
-
+[README (6).md](https://github.com/user-attachments/files/25822951/README.6.md)
 <div align="center">
 
 # 🛡️ NETSHIELD
@@ -101,6 +101,26 @@ https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/countries/{conti
 **Use Case:** Monitor or soft-block low-confidence suspicious IPs — useful for rate limiting, logging, or stricter inspection rules.
 
 > ⚠️ **Warning:** This list has a **high false positive rate**. Many IPs may be legitimate users, shared hosting, or dynamic IPs that were temporarily flagged. Recommended for **logging and monitoring only** — not for hard blocking.
+
+---
+
+### 🤖 Bot Detector Blacklist
+
+| Property | Value |
+|---|---|
+| **Content** | Bots, scrapers, scanners, DDoS sources, VPN/proxy abuse, cloud bots |
+| **Format** | One IP per line |
+| **Update** | Automatic · Every 3 hours |
+| **Source** | [lula73/bot-detector](https://github.com/lula73/bot-detector) |
+| **Raw Link** | [bot_detector_blacklist_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/bot_detector_blacklist_ipv4.txt) |
+
+**Categories:**
+- AI Crawlers, SEO Bots, Scrapers, Search Engine Bots
+- Vulnerability Scanners, Aggressive Scanners
+- DDoS Sources, Proxy/VPN Abuse
+- Hosting/Cloud Bots (AWS, Azure, DigitalOcean etc.)
+
+**Use Case:** Block known bots and automated threats — ideal for web servers, APIs, and any service that should only be accessed by real users.
 
 ---
 
