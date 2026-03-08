@@ -20,9 +20,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: threat_db.json
-          key: threat-db-${{ github.run_id }}
+          key: threat-ai-cache-${{ github.run_id }}
           restore-keys: |
-            threat-db-
+            threat-ai-cache-
 
       - name: Run Score Decay Monitor
         run: |
