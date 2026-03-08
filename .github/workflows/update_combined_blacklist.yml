@@ -1,8 +1,9 @@
-name: Update Combined Threat Blacklist (IPv4)
+name: Update Combined Threat Blacklist (AI IPv4)
 
 on:
   schedule:
     - cron: '0 */6 * * *'   # alle 6 Stunden
+    - cron: '20 2 * * 0'    # sonntags extra Lern-/Discovery-Lauf
   workflow_dispatch:
 
 permissions:
@@ -18,15 +19,28 @@ jobs:
         with:
           persist-credentials: true
 
-      - name: Cache seen_db
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install scikit-learn joblib
+
+      - name: Cache state files
         uses: actions/cache@v4
         with:
-          path: seen_db.json
-          key: netshield-seen-db-${{ github.run_id }}
+          path: |
+            threat_db.json
+            discovered_feeds.json
+            ip_ai_model.joblib
+          key: threat-ai-${{ github.run_id }}
           restore-keys: |
-            netshield-seen-db-
+            threat-ai-
 
-      - name: Fetch and build blacklist
+      - name: Fetch, discover, learn and build IPv4 lists
         run: |
           python3 << 'EOF'
           import ipaddress
@@ -34,18 +48,514 @@ jobs:
           import os
           import re
           import urllib.request
-          from datetime import datetime, timezone, timedelta
-          from concurrent.futures import ThreadPoolExecutor, as_completed
+          from datetime import datetime, timezone
+          from urllib.parse import urljoin
+
+          from sklearn.ensemble import RandomForestClassifier
+          import joblib
+
+          DB_FILE = "threat_db.json"
+          DISCOVERED_FILE = "discovered_feeds.json"
+          MODEL_FILE = "ip_ai_model.joblib"
+          EXPIRY_DAYS = 90
+          MIN_DISCOVERED_IPS = 50
+          MAX_FEEDS_TOTAL = 500
+          USER_AGENT = "NETSHIELD-AI-Collector/1.0"
 
           now = datetime.now(timezone.utc)
           now_day = now.strftime("%Y-%m-%d")
           now_stamp = now.strftime("%Y-%m-%d %H:%M UTC")
-          EXPIRY_DAYS = 90
-          DB_FILE = "seen_db.json"
 
-          SOURCES = {
-              "cinsscore":            "https://cinsscore.com/list/ci-badguys.txt",
-              "greensnow":            "https://blocklist.greensnow.co/greensnow.txt",
-              "feodo_aggressive":     "https://feodotracker.abuse.ch/downloads/ipblocklist_aggressive.txt",
-              "threatfox_ioc":        "https://raw.githubusercontent.com/elliotwutingfeng/ThreatFox-IOC-IPs/refs/heads/main/ips.txt",
-              "l
+          STATIC_SOURCES = {
+              "feodo_aggressive": "https://feodotracker.abuse.ch/downloads/ipblocklist_aggressive.txt",
+              "threatfox_ioc": "https://raw.githubusercontent.com/elliotwutingfeng/ThreatFox-IOC-IPs/refs/heads/main/ips.txt",
+              "c2_tracker": "https://raw.githubusercontent.com/montysecurity/C2-Tracker/main/data/all.txt",
+              "threatview_high_conf": "https://threatview.io/Downloads/IP-High-Confidence-Feed.txt",
+              "binary_defense": "https://binarydefense.com/banlist.txt",
+              "et_block_ips": "https://rules.emergingthreats.net/fwrules/emerging-Block-IPs.txt",
+              "trcert_malware": "https://raw.githubusercontent.com/cenk/trcert-malware/refs/heads/main/trcert-ips.txt",
+              "firehol_abusers_1d": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/firehol_abusers_1d.netset",
+              "firehol_cybercrime": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/refs/heads/master/cybercrime.ipset",
+              "blocklist_de_all": "https://www.blocklist.de/downloads/export-ips_all.txt",
+              "blocklist_de_strong": "https://lists.blocklist.de/lists/strongips.txt",
+              "spamhaus_drop": "https://www.spamhaus.org/drop/drop.txt",
+              "cinsscore": "https://cinsscore.com/list/ci-badguys.txt",
+              "cinsarmy": "https://cinsarmy.com/list/ci-badguys.txt",
+              "greensnow": "https://blocklist.greensnow.co/greensnow.txt",
+              "dshield": "https://www.dshield.org/block.txt",
+              "danger_bruteforce": "https://danger.rulez.sk/projects/bruteforceblocker/blist.php",
+              "shadowwhisperer_scanners": "https://raw.githubusercontent.com/ShadowWhisperer/IPs/master/Other/Scanners",
+              "shadowwhisperer_bf_high": "https://raw.githubusercontent.com/ShadowWhisperer/IPs/master/BruteForce/High",
+              "shadowwhisperer_bf_extreme": "https://raw.githubusercontent.com/ShadowWhisperer/IPs/master/BruteForce/Extreme",
+              "crowdsec_ssh_bf": "https://raw.githubusercontent.com/Y3ll0w/CrowdSec-CAPI-Decisions/refs/heads/main/ssh-bf.json.txt",
+              "interserver": "https://sigs.interserver.net/ip.txt",
+              "sefinek": "https://raw.githubusercontent.com/sefinek/Malicious-IP-Addresses/main/lists/main.txt",
+              "netshield_blacklist": "https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/refs/heads/main/blacklist_confidence40_ipv4.txt",
+              "netshield_botdetector": "https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/refs/heads/main/bot_detector_blacklist_ipv4.txt",
+          }
+
+          DISCOVERY_PAGES = [
+              "https://github.com/firehol/blocklist-ipsets/tree/master",
+              "https://github.com/ShadowWhisperer/IPs/tree/master",
+              "https://github.com/sefinek/Malicious-IP-Addresses/tree/main/lists",
+              "https://github.com/juergen2025sys/NETSHIELD/tree/main",
+              "https://github.com/montysecurity/C2-Tracker/tree/main/data",
+              "https://github.com/cenk/trcert-malware/tree/main",
+          ]
+
+          FEED_HINTS = ("ip", "ips", "block", "blacklist", "ban", "threat", "ioc", "malware", "c2", "bot", "scanner", "bruteforce", "ddos")
+          FEED_SUFFIXES = (".txt", ".netset", ".ipset", ".list", ".blocklist", ".conf")
+
+          IPV4_RE = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
+          URL_RE = re.compile(r'https?://[^"\s<>]+')
+          GH_BLOB_RE = re.compile(r'https://github\.com/([^/]+)/([^/]+)/blob/([^"\'#?]+)')
+          HREF_RE = re.compile(r'href="([^"]+)"')
+
+          DNS_WHITELIST = {
+              "8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1",
+              "208.67.222.222", "208.67.220.220", "9.9.9.9", "149.112.112.112",
+              "94.140.14.14", "94.140.15.15", "4.2.2.1", "4.2.2.2",
+              "8.26.56.26", "8.20.247.20", "156.154.70.1", "156.154.71.1",
+              "129.6.15.28", "129.6.15.29", "127.0.0.1", "0.0.0.0",
+          }
+
+          _WHITELIST_CIDRS = [
+              "52.0.0.0/8", "54.0.0.0/8", "99.0.0.0/8",
+              "100.24.0.0/13", "100.64.0.0/10",
+              "104.16.0.0/13", "104.24.0.0/14",
+              "172.64.0.0/13", "162.158.0.0/15",
+              "23.0.0.0/12", "23.32.0.0/11",
+              "151.101.0.0/16", "142.250.0.0/15", "172.217.0.0/16",
+          ]
+          _WHITELIST_NETS = [ipaddress.ip_network(c) for c in _WHITELIST_CIDRS]
+
+          def is_gaming_launcher(ip):
+              try:
+                  addr = ipaddress.ip_address(ip)
+                  return any(addr in net for net in _WHITELIST_NETS)
+              except:
+                  return False
+
+          def extract_ipv4s(text):
+              found = set()
+              for ip in IPV4_RE.findall(text):
+                  if is_valid_ipv4(ip) and not is_private_or_reserved(ip):
+                      found.add(ip)
+              return found
+
+          def normalize_github_url(url):
+              m = GH_BLOB_RE.match(url)
+              if m:
+                  owner, repo, path = m.groups()
+                  return f"https://raw.githubusercontent.com/{owner}/{repo}/{path}"
+              return url
+
+          def looks_like_feed_url(url):
+              lower = url.lower()
+              return lower.startswith("https://") and any(h in lower for h in FEED_HINTS) and (lower.endswith(FEED_SUFFIXES) or "raw.githubusercontent.com" in lower or "download" in lower)
+
+          def keyword_weight(name_or_url):
+              s = name_or_url.lower()
+              score = 1
+              if any(k in s for k in ("feodo", "threatfox", "c2", "ioc", "malware")):
+                  score += 5
+              if any(k in s for k in ("drop", "botnet", "aggressive", "compromised")):
+                  score += 4
+              if any(k in s for k in ("scanner", "bruteforce", "ssh", "ddos", "abusers")):
+                  score += 2
+              if "abuseipdb" in s or "blocklist" in s or "badguys" in s:
+                  score += 1
+              return min(score, 10)
+
+          def source_kind(name_or_url):
+              s = name_or_url.lower()
+              if any(k in s for k in ("c2", "ioc", "feodo", "threatfox", "malware", "compromised")):
+                  return "malware"
+              if any(k in s for k in ("ddos", "scanner", "bruteforce", "ssh", "abusers")):
+                  return "scanner"
+              return "generic"
+
+          cloud_networks = []
+
+          def add_networks_from_iter(prefixes, label):
+              added = 0
+              for prefix in prefixes:
+                  try:
+                      net = ipaddress.ip_network(prefix, strict=False)
+                      if net.version == 4:
+                          cloud_networks.append(net)
+                          added += 1
+                  except Exception:
+                      pass
+              print(f"Cloud/DC geladen: {label} -> {added} IPv4-Netze")
+
+          try:
+              data = json.loads(fetch_text("https://ip-ranges.amazonaws.com/ip-ranges.json"))
+              add_networks_from_iter([x["ip_prefix"] for x in data.get("prefixes", []) if "ip_prefix" in x], "AWS")
+          except Exception as e:
+              print(f"AWS Bereichs-Import fehlgeschlagen: {e}")
+
+          try:
+              add_networks_from_iter(fetch_text("https://www.cloudflare.com/ips-v4").splitlines(), "Cloudflare")
+          except Exception as e:
+              print(f"Cloudflare Bereichs-Import fehlgeschlagen: {e}")
+
+          for label, url in (
+              ("GCP", "https://www.gstatic.com/ipranges/cloud.json"),
+              ("Google", "https://www.gstatic.com/ipranges/goog.json"),
+          ):
+              try:
+                  data = json.loads(fetch_text(url))
+                  prefixes = [x["ipv4Prefix"] for x in data.get("prefixes", []) if "ipv4Prefix" in x]
+                  add_networks_from_iter(prefixes, label)
+              except Exception as e:
+                  print(f"{label} Bereichs-Import fehlgeschlagen: {e}")
+
+          try:
+              data = json.loads(fetch_text("https://api.fastly.com/public-ip-list"))
+              add_networks_from_iter(data.get("addresses", []), "Fastly")
+          except Exception as e:
+              print(f"Fastly Bereichs-Import fehlgeschlagen: {e}")
+
+          try:
+              page = fetch_text("https://www.microsoft.com/en-us/download/confirmation.aspx?id=56519")
+              m = re.search(r'https://download\.microsoft\.com/download/[^"\']+ServiceTags_Public_[^"\']+\.json', page)
+              if m:
+                  data = json.loads(fetch_text(m.group(0), timeout=40))
+                  prefixes = []
+                  for value in data.get("values", []):
+                      for p in value.get("properties", {}).get("addressPrefixes", []):
+                          if ":" not in p:
+                              prefixes.append(p)
+                  add_networks_from_iter(prefixes, "Azure")
+          except Exception as e:
+              print(f"Azure Bereichs-Import fehlgeschlagen: {e}")
+
+          def is_cloud_or_dc_ip(ip):
+              try:
+                  obj = ipaddress.ip_address(ip)
+                  return any(obj in net for net in cloud_networks)
+              except Exception:
+                  return False
+
+          discovered_state = {}
+          if os.path.exists(DISCOVERED_FILE):
+              try:
+                  with open(DISCOVERED_FILE, "r", encoding="utf-8") as f:
+                      discovered_state = json.load(f)
+              except Exception:
+                  discovered_state = {}
+
+          db = {}
+          if os.path.exists(DB_FILE):
+              try:
+                  with open(DB_FILE, "r", encoding="utf-8") as f:
+                      db = json.load(f)
+                  print(f"Threat-DB geladen: {len(db)} IPs")
+              except Exception:
+                  db = {}
+          else:
+              print("Keine Threat-DB gefunden, starte neu.")
+
+          discovered_urls = set()
+          for page_url in DISCOVERY_PAGES:
+              try:
+                  html = fetch_text(page_url)
+                  all_urls = set(URL_RE.findall(html))
+                  for href in HREF_RE.findall(html):
+                      full = urljoin(page_url, href)
+                      all_urls.add(full)
+                  for url in all_urls:
+                      url = normalize_github_url(url)
+                      if "github.com/" in url and "/tree/" in url:
+                          continue
+                      if looks_like_feed_url(url):
+                          discovered_urls.add(url)
+              except Exception as e:
+                  print(f"Discovery fehlgeschlagen: {page_url} -> {e}")
+
+          all_sources = dict(STATIC_SOURCES)
+          for url in sorted(discovered_urls):
+              key = "auto_" + re.sub(r"[^a-z0-9]+", "_", url.lower()).strip("_")[:80]
+              all_sources[key] = url
+
+          for key, meta in discovered_state.items():
+              url = meta.get("url")
+              if url and len(all_sources) < MAX_FEEDS_TOTAL:
+                  all_sources.setdefault(key, url)
+
+          all_sources = dict(list(all_sources.items())[:MAX_FEEDS_TOTAL])
+          print(f"Feeds gesamt: {len(all_sources)} (inkl. Discovery)")
+
+          current_seen = set()
+          good_discovered = {}
+          feed_stats = []
+
+          for source_name, source_url in all_sources.items():
+              try:
+                  content = fetch_text(source_url, timeout=25)
+                  ips = extract_ipv4s(content)
+                  if len(ips) < 10:
+                      raise ValueError(f"zu wenige IPv4s ({len(ips)})")
+
+                  weight = keyword_weight(source_name + " " + source_url)
+                  kind = source_kind(source_name + " " + source_url)
+
+                  for ip in ips:
+                      if ip in DNS_WHITELIST or is_gaming_launcher(ip):
+                          continue
+
+                      item = db.get(ip, {
+                          "score": 0,
+                          "first_seen": now_day,
+                          "last_seen": now_day,
+                          "feed_count": 0,
+                          "strong_feeds": 0,
+                          "malware_feeds": 0,
+                          "scanner_feeds": 0,
+                          "generic_feeds": 0,
+                          "cloud_hits": 0,
+                          "last_probability": 0.0,
+                      })
+
+                      item["last_seen"] = now_day
+                      item["score"] += weight
+                      item["feed_count"] += 1
+                      if weight >= 7:
+                          item["strong_feeds"] += 1
+                      if kind == "malware":
+                          item["malware_feeds"] += 1
+                      elif kind == "scanner":
+                          item["scanner_feeds"] += 1
+                      else:
+                          item["generic_feeds"] += 1
+
+                      if is_cloud_or_dc_ip(ip):
+                          item["cloud_hits"] = 1
+
+                      db[ip] = item
+                      current_seen.add(ip)
+
+                  feed_stats.append((source_name, len(ips), weight, kind))
+                  print(f"OK: {source_name} -> {len(ips)} IPv4 | Gewicht {weight} | Typ {kind}")
+
+                  if source_name.startswith("auto_") and len(ips) >= MIN_DISCOVERED_IPS:
+                      good_discovered[source_name] = {
+                          "url": source_url,
+                          "last_good": now_day,
+                          "last_count": len(ips),
+                      }
+              except Exception as e:
+                  print(f"FEHLER: {source_name} -> {e}")
+
+          for key, val in good_discovered.items():
+              discovered_state[key] = val
+
+          stale_keys = []
+          for key, meta in discovered_state.items():
+              try:
+                  last = datetime.strptime(meta.get("last_good", "1970-01-01"), "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                  if (now - last).days > 45:
+                      stale_keys.append(key)
+              except Exception:
+                  stale_keys.append(key)
+          for key in stale_keys:
+              discovered_state.pop(key, None)
+
+          with open(DISCOVERED_FILE, "w", encoding="utf-8") as f:
+              json.dump(discovered_state, f, separators=(",", ":"), ensure_ascii=False)
+
+          expired = []
+          for ip in list(db.keys()):
+              try:
+                  last = datetime.strptime(db[ip]["last_seen"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                  if (now - last).days > EXPIRY_DAYS:
+                      expired.append(ip)
+                      del db[ip]
+              except Exception:
+                  expired.append(ip)
+                  del db[ip]
+          print(f"Abgelaufen & entfernt: {len(expired)} IPs")
+
+          def feature_vector(ip, item):
+              first_seen = datetime.strptime(item["first_seen"], "%Y-%m-%d")
+              last_seen = datetime.strptime(item["last_seen"], "%Y-%m-%d")
+              age_days = max((last_seen - first_seen).days, 0)
+              days_since_seen = max((now.replace(tzinfo=None) - last_seen).days, 0)
+              return [
+                  item.get("score", 0),
+                  item.get("feed_count", 0),
+                  item.get("strong_feeds", 0),
+                  item.get("malware_feeds", 0),
+                  item.get("scanner_feeds", 0),
+                  item.get("generic_feeds", 0),
+                  item.get("cloud_hits", 0),
+                  age_days,
+                  days_since_seen,
+              ]
+
+          X = []
+          y = []
+          for ip, item in db.items():
+              negative = (
+                  item.get("cloud_hits", 0) == 1 or
+                  ip in DNS_WHITELIST or
+                  is_gaming_launcher(ip) or
+                  (item.get("score", 0) <= 2 and item.get("feed_count", 0) <= 1)
+              )
+              positive = (
+                  item.get("cloud_hits", 0) == 0 and
+                  item.get("score", 0) >= 12 and
+                  item.get("feed_count", 0) >= 2 and
+                  (item.get("malware_feeds", 0) >= 1 or item.get("strong_feeds", 0) >= 2)
+              )
+
+              if positive:
+                  X.append(feature_vector(ip, item))
+                  y.append(1)
+              elif negative:
+                  X.append(feature_vector(ip, item))
+                  y.append(0)
+
+          model = None
+          positives = sum(y)
+          negatives = len(y) - positives
+
+          if positives >= 50 and negatives >= 50:
+              model = RandomForestClassifier(
+                  n_estimators=250,
+                  max_depth=12,
+                  min_samples_leaf=2,
+                  random_state=42,
+                  n_jobs=-1
+              )
+              model.fit(X, y)
+              joblib.dump(model, MODEL_FILE)
+              print(f"KI-Modell neu trainiert | positive={positives} negative={negatives}")
+          elif os.path.exists(MODEL_FILE):
+              model = joblib.load(MODEL_FILE)
+              print("Vorhandenes KI-Modell geladen")
+          else:
+              print("Noch nicht genug Trainingsdaten für ein KI-Modell")
+
+          def fallback_probability(item):
+              s = item.get("score", 0)
+              fc = item.get("feed_count", 0)
+              strong = item.get("strong_feeds", 0)
+              mal = item.get("malware_feeds", 0)
+              cloud = item.get("cloud_hits", 0)
+              raw = (s * 0.05) + (fc * 0.04) + (strong * 0.12) + (mal * 0.12) - (cloud * 0.55)
+              raw = max(0, min(raw, 0.99))
+              return raw
+
+          blacklist = []
+          watchlist = []
+          datacenter_watchlist = []
+
+          for ip, item in db.items():
+              if model:
+                  prob = float(model.predict_proba([feature_vector(ip, item)])[0][1])
+              else:
+                  prob = float(fallback_probability(item))
+
+              item["last_probability"] = round(prob, 6)
+              db[ip] = item
+              cloud = item.get("cloud_hits", 0) == 1
+
+              if cloud:
+                  if (
+                      prob >= 0.92 and
+                      item.get("score", 0) >= 14 and
+                      item.get("feed_count", 0) >= 3 and
+                      (item.get("malware_feeds", 0) >= 1 or item.get("strong_feeds", 0) >= 2)
+                  ):
+                      blacklist.append(ip)
+                  elif prob >= 0.75 or item.get("score", 0) >= 14:
+                      datacenter_watchlist.append(ip)
+                  continue
+
+              if (
+                  prob >= 0.88 and
+                  item.get("score", 0) >= 6 and
+                  item.get("feed_count", 0) >= 2
+              ) or (
+                  item.get("score", 0) >= 16 and
+                  item.get("strong_feeds", 0) >= 1
+              ):
+                  blacklist.append(ip)
+              elif prob >= 0.60 or item.get("score", 0) >= 6:
+                  watchlist.append(ip)
+
+          blacklist = sorted(set(blacklist), key=lambda ip: (-db[ip]["last_probability"], -db[ip]["score"], ip))
+          watchlist = sorted(set(watchlist) - set(blacklist), key=lambda ip: (-db[ip]["last_probability"], -db[ip]["score"], ip))
+          datacenter_watchlist = sorted(set(datacenter_watchlist), key=lambda ip: (-db[ip]["last_probability"], -db[ip]["score"], ip))
+
+          with open(DB_FILE, "w", encoding="utf-8") as f:
+              json.dump(db, f, separators=(",", ":"), ensure_ascii=False)
+
+          with open("combined_threat_blacklist_ipv4.txt", "w", encoding="utf-8") as f:
+              f.write("# Combined Threat Blacklist (IPv4)\n")
+              f.write(f"# Aktualisiert: {now_stamp}\n")
+              f.write(f"# Feeds gesamt: {len(all_sources)}\n")
+              f.write(f"# Discovery-Feeds aktiv: {len(discovered_state)}\n")
+              f.write(f"# Cloud/DC-IPv4-Netze geladen: {len(cloud_networks)}\n")
+              f.write(f"# Blacklist IPv4s: {len(blacklist)}\n\n")
+              f.write("\n".join(blacklist) + ("\n" if blacklist else ""))
+
+          with open("watchlist_confidence20to39_ipv4.txt", "w", encoding="utf-8") as f:
+              f.write("# Watchlist (IPv4)\n")
+              f.write(f"# Aktualisiert: {now_stamp}\n")
+              f.write(f"# Watchlist IPv4s: {len(watchlist)}\n\n")
+              f.write("\n".join(watchlist) + ("\n" if watchlist else ""))
+
+          with open("datacenter_suspect_watchlist_ipv4.txt", "w", encoding="utf-8") as f:
+              f.write("# Datacenter/Cloud Suspect Watchlist (IPv4)\n")
+              f.write(f"# Aktualisiert: {now_stamp}\n")
+              f.write("# Nicht fuer LAN-Auto-Block vorgesehen\n")
+              f.write(f"# Eintraege: {len(datacenter_watchlist)}\n\n")
+              f.write("\n".join(datacenter_watchlist) + ("\n" if datacenter_watchlist else ""))
+
+          with open("auto_discovered_feeds.json", "w", encoding="utf-8") as f:
+              json.dump(discovered_state, f, indent=2, ensure_ascii=False)
+
+          with open("combined_threat_blacklist_report.md", "w", encoding="utf-8") as f:
+              f.write("# Combined Threat Blacklist Report\n\n")
+              f.write(f"- Aktualisiert: **{now_stamp}**\n")
+              f.write(f"- Feeds gesamt: **{len(all_sources)}**\n")
+              f.write(f"- Discovery-Feeds aktiv: **{len(discovered_state)}**\n")
+              f.write(f"- Blacklist: **{len(blacklist)}** IPv4\n")
+              f.write(f"- Watchlist: **{len(watchlist)}** IPv4\n")
+              f.write(f"- Datacenter/Cloud-Watchlist: **{len(datacenter_watchlist)}** IPv4\n")
+              f.write(f"- Abgelaufen entfernt: **{len(expired)}**\n\n")
+              f.write("## Top Feed-Statistik\n\n")
+              f.write("| Feed | IPv4 | Gewicht | Typ |\n")
+              f.write("|---|---:|---:|---|\n")
+              for name, count, weight, kind in sorted(feed_stats, key=lambda x: (-x[1], -x[2], x[0]))[:25]:
+                  f.write(f"| `{name}` | {count} | {weight} | {kind} |\n")
+
+          print(f"Fertig! Blacklist={len(blacklist)} | Watchlist={len(watchlist)} | Cloud/DC-Watchlist={len(datacenter_watchlist)}")
+          EOF
+
+      - name: Commit and Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          grep -qxF 'threat_db.json' .gitignore 2>/dev/null || echo 'threat_db.json' >> .gitignore
+          grep -qxF 'discovered_feeds.json' .gitignore 2>/dev/null || echo 'discovered_feeds.json' >> .gitignore
+          grep -qxF 'ip_ai_model.joblib' .gitignore 2>/dev/null || echo 'ip_ai_model.joblib' >> .gitignore
+
+          git add \
+            combined_threat_blacklist_ipv4.txt \
+            watchlist_confidence20to39_ipv4.txt \
+            datacenter_suspect_watchlist_ipv4.txt \
+            auto_discovered_feeds.json \
+            combined_threat_blacklist_report.md \
+            .gitignore
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Auto-update AI IPv4 threat lists [$(date -u '+%Y-%m-%d %H:%M') UTC]"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
