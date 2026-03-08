@@ -1,0 +1,197 @@
+name: CVE-to-IP Mapper
+
+on:
+  schedule:
+    - cron: '0 4 * * *'  # täglich 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cve-mapper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Map Active CVE Exploiters to IPs
+        run: |
+          python3 << 'EOF'
+          import urllib.request
+          import re
+          import json
+          import os
+          import time
+          from datetime import datetime, timezone
+
+          now = datetime.now(timezone.utc)
+          now_str = now.strftime("%Y-%m-%d %H:%M UTC")
+          IP_RE = re.compile(r'\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b')
+
+          def fetch(url, timeout=30):
+              try:
+                  req = urllib.request.Request(url, headers={"User-Agent": "NETSHIELD-CVEMapper/1.0"})
+                  with urllib.request.urlopen(req, timeout=timeout) as r:
+                      return r.read().decode("utf-8", errors="ignore")
+              except Exception as e:
+                  print(f"  FEHLER {url.split('/')[-1]}: {e}")
+                  return None
+
+          def is_private(ip):
+              parts = list(map(int, ip.split(".")))
+              return (parts[0] == 10 or
+                      (parts[0] == 172 and 16 <= parts[1] <= 31) or
+                      (parts[0] == 192 and parts[1] == 168) or
+                      parts[0] in (0, 127) or parts[0] >= 224)
+
+          # ── CVE-Exploit-IP-Feeds (alle ohne API-Key) ──────────────────────
+          CVE_SOURCES = {
+              # Feodo Tracker – C2-Server aktiver Malware-Kampagnen
+              "Feodo C2 (Aggressive)":
+                  "https://feodotracker.abuse.ch/downloads/ipblocklist_aggressive.txt",
+              "Feodo C2 (Recommended)":
+                  "https://feodotracker.abuse.ch/downloads/ipblocklist.txt",
+              # ThreatFox – IOCs aktiver Exploits (abuse.ch)
+              "ThreatFox IOC IPs":
+                  "https://raw.githubusercontent.com/elliotwutingfeng/ThreatFox-IOC-IPs/main/ips.txt",
+              # C2-Tracker – aktive C2-Server bekannter Malware-Familien
+              "C2-Tracker (Montysecurity)":
+                  "https://raw.githubusercontent.com/montysecurity/C2-Tracker/main/data/all.txt",
+              # CISA KEV – Known Exploited Vulnerabilities IPs
+              "Malware Bazaar C2":
+                  "https://bazaar.abuse.ch/export/txt/cscb/recent/",
+              # Shadowserver – aktiv exploitete IPs
+              "GreyNoise RIOT (harmlos-Liste zum Ausschließen)":
+                  "https://api.greynoise.io/v3/community/riot",
+              # Botnet C2 IPs
+              "Botnet C2 (openphish)":
+                  "https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt",
+              # MISP Threat Feeds
+              "MISP Botnet C2":
+                  "https://www.misp-project.org/feeds/botnet-C2-IP.csv",
+              # Emerging Threats aktive Exploit-IPs
+              "ET Compromised":
+                  "https://rules.emergingthreats.net/blockrules/compromised-ips.txt",
+              # Abusix
+              "Abusix Combined":
+                  "https://raw.githubusercontent.com/borestad/blocklist-abuseipdb/main/abuseipdb-s100-30d.ipv4",
+          }
+
+          # CVE-Tags für bekannte Exploit-Kampagnen (aus öffentlichen Feeds)
+          CVE_TAGS = {
+              "feodo":     ["CVE-2023-3519", "Emotet", "QakBot", "TrickBot"],
+              "c2tracker": ["CVE-2021-44228 (Log4Shell)", "CVE-2022-1388", "Cobalt Strike"],
+              "et":        ["CVE-2017-0144 (EternalBlue)", "CVE-2019-0708 (BlueKeep)"],
+          }
+
+          all_exploit_ips = set()
+          source_stats    = {}
+          cve_ip_map      = {}  # CVE/Malware -> set of IPs
+
+          for name, url in CVE_SOURCES.items():
+              print(f"  Lade {name}...")
+              text = fetch(url)
+              if not text:
+                  source_stats[name] = 0
+                  continue
+
+              ips = {ip for ip in IP_RE.findall(text) if not is_private(ip)}
+              all_exploit_ips.update(ips)
+              source_stats[name] = len(ips)
+
+              # Tag zuweisen
+              tag = "unknown"
+              if "feodo" in url.lower():
+                  tag = "Feodo/Emotet/QakBot C2"
+              elif "c2-tracker" in url.lower() or "montysecurity" in url.lower():
+                  tag = "Active C2 (Cobalt Strike / Metasploit)"
+              elif "threatfox" in url.lower():
+                  tag = "ThreatFox IOC"
+              elif "compromised" in url.lower():
+                  tag = "Compromised Host"
+              elif "abuseipdb" in url.lower():
+                  tag = "AbuseIPDB Score 100"
+
+              if tag not in cve_ip_map:
+                  cve_ip_map[tag] = set()
+              cve_ip_map[tag].update(ips)
+
+              print(f"    → {len(ips)} IPs ({tag})")
+
+          print(f"\nGesamt einzigartige Exploit-IPs: {len(all_exploit_ips)}")
+
+          # ── Bestehende Datei mergen ───────────────────────────────────────
+          CVE_FILE = "cve_exploit_ips.txt"
+          existing = set()
+          if os.path.exists(CVE_FILE):
+              with open(CVE_FILE) as f:
+                  existing = {l.strip() for l in f if l.strip() and not l.startswith("#")}
+
+          new_ips = all_exploit_ips - existing
+          final   = sorted(all_exploit_ips, key=lambda ip: tuple(int(o) for o in ip.split(".")))
+
+          with open(CVE_FILE, "w") as f:
+              f.write(f"# CVE Exploit & C2 IP Blocklist – NETSHIELD\n")
+              f.write(f"# Aktualisiert: {now_str}\n")
+              f.write(f"# Quellen: {len(CVE_SOURCES)}\n")
+              f.write(f"# Gesamt IPs: {len(final)} | Neu: {len(new_ips)}\n\n")
+              # Gruppiert nach Kategorie ausgeben
+              written = set()
+              for tag, ips in sorted(cve_ip_map.items()):
+                  valid = sorted(ips - written, key=lambda ip: tuple(int(o) for o in ip.split(".")))
+                  if valid:
+                      f.write(f"# ── {tag} ──\n")
+                      f.write("\n".join(valid) + "\n\n")
+                      written.update(valid)
+
+          print(f"cve_exploit_ips.txt: {len(final)} IPs | +{len(new_ips)} neu")
+
+          # ── combined_threat_blacklist aktualisieren ───────────────────────
+          BLACKLIST = "combined_threat_blacklist_ipv4.txt"
+          if os.path.exists(BLACKLIST):
+              with open(BLACKLIST) as f:
+                  bl_ips = set(IP_RE.findall(f.read()))
+              new_for_bl = all_exploit_ips - bl_ips
+              if new_for_bl:
+                  with open(BLACKLIST, "a") as f:
+                      f.write(f"\n# CVE/Exploit IPs – hinzugefügt {now_str}\n")
+                      f.write("\n".join(sorted(new_for_bl)) + "\n")
+                  print(f"Blacklist: +{len(new_for_bl)} Exploit-IPs hinzugefügt")
+
+          # ── Report ────────────────────────────────────────────────────────
+          lines = []
+          lines.append("# CVE-to-IP Mapper – Report")
+          lines.append(f"**Aktualisiert:** {now_str}\n")
+          lines.append("---")
+          lines.append("## Quellen & Treffer\n")
+          lines.append("| Quelle | IPs |")
+          lines.append("|---|---|")
+          for name, count in source_stats.items():
+              icon = "✅" if count > 0 else "❌"
+              lines.append(f"| {icon} {name} | {count} |")
+          lines.append("")
+          lines.append("---")
+          lines.append("## Kategorien\n")
+          lines.append("| Kategorie | IPs |")
+          lines.append("|---|---|")
+          for tag, ips in sorted(cve_ip_map.items(), key=lambda x: len(x[1]), reverse=True):
+              lines.append(f"| {tag} | **{len(ips)}** |")
+          lines.append("")
+          lines.append("---")
+          lines.append(f"**Gesamt:** {len(final)} IPs | **Neu:** +{len(new_ips)}")
+          lines.append(f"\n---\n*Generiert: {now_str}*")
+
+          with open("cve_exploit_report.md", "w") as f:
+              f.write("\n".join(lines))
+          print("cve_exploit_report.md geschrieben")
+          EOF
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add cve_exploit_ips.txt cve_exploit_report.md combined_threat_blacklist_ipv4.txt
+          git diff --staged --quiet || git commit -m "CVE Exploit IPs aktualisiert [$(date -u '+%Y-%m-%d %H:%M') UTC]"
+          git push
