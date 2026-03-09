@@ -132,11 +132,20 @@ jobs:
                           errors.append(f"Zeile {i}: Heredoc-Inhalt ohne Einrückung – YAML-Syntaxfehler (mindestens {heredoc_indent} Leerzeichen erwartet)")
                           in_heredoc = False
 
+              # ── Hilfsfunktion: Echter Code oder Fehlertext-String? ──────
+              def is_code_line(ln):
+                  """True wenn Zeile echter Code ist – kein Kommentar, kein append-Meldungstext."""
+                  s = ln.strip()
+                  if s.startswith('#'):
+                      return False
+                  import re as _re
+                  if _re.search(r'(errors|warnings)\.append\s*\(', ln):
+                      return False
+                  return True
+
               # ── str(dict).get() – AttributeError ────────────────────────
               for i, line in enumerate(lines, 1):
-                  # Eigene Regex-Patterns und Kommentare ausschließen
-                  stripped = line.strip()
-                  if stripped.startswith('#') or 're.search' in stripped or 're.compile' in stripped or "r'" in stripped or 'r"' in stripped or 'errors.append' in stripped or 'warnings.append' in stripped:
+                  if not is_code_line(line):
                       continue
                   if re.search(r'str\s*\(.*\)\s*\.get\s*\(', line):
                       errors.append(f"Zeile {i}: `str(...).get(...)` – str hat kein .get(), führt zu AttributeError. Korrekt: `(dict_expr).get(...)`")
