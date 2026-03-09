@@ -1,5 +1,5 @@
 # 🛡️ NETSHIELD – Security Report
-**Aktualisiert:** 2026-03-09 07:41 UTC
+**Aktualisiert:** 2026-03-09 13:55 UTC
 
 > Automatisch generierter Sicherheits-Report. Alle Daten stammen aus den NETSHIELD-Workflows.
 
@@ -8,24 +8,24 @@
 
 | Liste | Einträge | Status | Zuletzt aktualisiert |
 |---|---|---|---|
-| 🚫 Combined Threat Blacklist | **2,332,091** | ✅ | 2026-03-09 07:41 UTC |
-| 🧅 Tor Exit Nodes | **20,120** | ✅ | 2026-03-09 07:41 UTC |
-| 🦠 CVE / Exploit IPs | **220,881** | ✅ | 2026-03-09 07:41 UTC |
-| 🔒 VPN & Proxy Ranges | **111,974** | ✅ | 2026-03-09 07:41 UTC |
+| 🚫 Combined Threat Blacklist | **2,344,956** | ✅ | 2026-03-09 13:55 UTC |
+| 🧅 Tor Exit Nodes | **20,120** | ✅ | 2026-03-09 13:55 UTC |
+| 🦠 CVE / Exploit IPs | **220,881** | ✅ | 2026-03-09 13:55 UTC |
+| 🔒 VPN & Proxy Ranges | **111,974** | ✅ | 2026-03-09 13:55 UTC |
 
 ---
 ## ⚙️ Workflow-Status
 
 | Workflow | Report | Zuletzt gelaufen |
 |---|---|---|
-| Update Combined Blacklist | [✅ Report](combined_threat_blacklist_ipv4.txt) | 2026-03-09 07:41 UTC |
-| Tor Exit Monitor | [✅ Report](tor_exit_report.md) | 2026-03-09 07:41 UTC |
-| CVE-to-IP Mapper | [✅ Report](cve_exploit_report.md) | 2026-03-09 07:41 UTC |
-| VPN & Proxy Detector | [✅ Report](vpn_proxy_report.md) | 2026-03-09 07:41 UTC |
-| False Positive Checker | [✅ Report](false_positive_report.md) | 2026-03-09 07:41 UTC |
-| Geo-Tagger | [✅ Report](geo_tagger_report.md) | 2026-03-09 07:41 UTC |
-| Score Decay Monitor | [✅ Report](score_decay_report.md) | 2026-03-09 07:41 UTC |
-| ASN Reputation Scorer | [✅ Report](asn_reputation_report.md) | 2026-03-09 07:41 UTC |
+| Update Combined Blacklist | [✅ Report](combined_threat_blacklist_ipv4.txt) | 2026-03-09 13:55 UTC |
+| Tor Exit Monitor | [✅ Report](tor_exit_report.md) | 2026-03-09 13:55 UTC |
+| CVE-to-IP Mapper | [✅ Report](cve_exploit_report.md) | 2026-03-09 13:55 UTC |
+| VPN & Proxy Detector | [✅ Report](vpn_proxy_report.md) | 2026-03-09 13:55 UTC |
+| False Positive Checker | [✅ Report](false_positive_report.md) | 2026-03-09 13:55 UTC |
+| Geo-Tagger | [✅ Report](geo_tagger_report.md) | 2026-03-09 13:55 UTC |
+| Score Decay Monitor | [✅ Report](score_decay_report.md) | 2026-03-09 13:55 UTC |
+| ASN Reputation Scorer | [✅ Report](asn_reputation_report.md) | 2026-03-09 13:55 UTC |
 
 ---
 ## 💀 Score Decay Monitor
@@ -81,4 +81,4 @@
 | ASN Firewall Blocklist | [asn_blocklist_firewall.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/asn_blocklist_firewall.txt) |
 
 ---
-*Automatisch generiert von NETSHIELD Report Generator · 2026-03-09 07:41 UTC*
+*Automatisch generiert von NETSHIELD Report Generator · 2026-03-09 13:55 UTC*
