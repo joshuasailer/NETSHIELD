@@ -136,7 +136,7 @@ jobs:
               for i, line in enumerate(lines, 1):
                   # Eigene Regex-Patterns und Kommentare ausschließen
                   stripped = line.strip()
-                  if stripped.startswith('#') or 're.search' in stripped or 're.compile' in stripped or "r'" in stripped or 'r"' in stripped:
+                  if stripped.startswith('#') or 're.search' in stripped or 're.compile' in stripped or "r'" in stripped or 'r"' in stripped or 'errors.append' in stripped or 'warnings.append' in stripped:
                       continue
                   if re.search(r'str\s*\(.*\)\s*\.get\s*\(', line):
                       errors.append(f"Zeile {i}: `str(...).get(...)` – str hat kein .get(), führt zu AttributeError. Korrekt: `(dict_expr).get(...)`")
