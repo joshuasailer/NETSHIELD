@@ -83,11 +83,15 @@ jobs:
                           break
 
               # ── Commit-Message-Format ────────────────────────────────────
-              commit_msgs = re.findall(r'git commit -m "([^"]+)"', content)
-              for msg in commit_msgs:
-                  # $() in Message = dynamischer Timestamp → nur warnen wenn weder UTC noch date drin
-                  if "UTC" not in msg and "date" not in msg:
-                      warnings.append(f"Commit-Message ohne UTC-Zeitstempel: `{msg[:60]}`")
+              for i, line in enumerate(lines, 1):
+                  stripped = line.strip()
+                  # Nur echte Shell-Zeilen prüfen (nicht Python-Code mit re.findall etc.)
+                  if stripped.startswith("git commit -m") and "findall" not in stripped and "re." not in stripped:
+                      m = re.search(r'git commit -m ["\']([^"\']+)["\']', stripped)
+                      if m:
+                          msg = m.group(1)
+                          if "UTC" not in msg and "date" not in msg:
+                              warnings.append(f"Zeile {i}: Commit-Message ohne UTC-Zeitstempel: `{msg[:60]}`")
 
               # ── git add vor commit ───────────────────────────────────────
               if "git commit" in content and "git add" not in content:
