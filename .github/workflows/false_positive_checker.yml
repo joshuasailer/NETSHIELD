@@ -2,7 +2,7 @@ name: False Positive Checker
 
 on:
   schedule:
-    - cron: '0 5 * * 0'  # wöchentlich Sonntag 05:00 UTC
+    - cron: '0 5 * * 0'  # Sonntag 05:00 UTC  # wöchentlich Sonntag 05:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -11,6 +11,7 @@ permissions:
 jobs:
   fp-checker:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -209,4 +210,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add false_positives_log.txt false_positive_report.md combined_threat_blacklist_ipv4.txt
           git diff --staged --quiet || git commit -m "False Positive Check abgeschlossen [$(date -u '+%Y-%m-%d %H:%M') UTC]"
-          git push
+          git pull --rebase origin ${GITHUB_REF_NAME}
+          git push origin HEAD:${GITHUB_REF_NAME}

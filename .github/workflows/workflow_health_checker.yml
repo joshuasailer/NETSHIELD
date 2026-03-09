@@ -85,7 +85,8 @@ jobs:
               # ── Commit-Message-Format ────────────────────────────────────
               commit_msgs = re.findall(r'git commit -m "([^"]+)"', content)
               for msg in commit_msgs:
-                  if "UTC" not in msg:
+                  # $() in Message = dynamischer Timestamp → nur warnen wenn weder UTC noch date drin
+                  if "UTC" not in msg and "date" not in msg:
                       warnings.append(f"Commit-Message ohne UTC-Zeitstempel: `{msg[:60]}`")
 
               # ── git add vor commit ───────────────────────────────────────

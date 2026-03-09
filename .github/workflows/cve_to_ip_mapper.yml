@@ -2,7 +2,7 @@ name: CVE-to-IP Mapper
 
 on:
   schedule:
-    - cron: '0 4 * * *'  # täglich 04:00 UTC
+    - cron: '0 4 * * *'  # täglich 04:00 UTC  # täglich 04:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -11,6 +11,7 @@ permissions:
 jobs:
   cve-mapper:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -185,4 +186,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add cve_exploit_ips.txt cve_exploit_report.md
           git diff --staged --quiet || git commit -m "CVE Exploit IPs aktualisiert [$(date -u '+%Y-%m-%d %H:%M') UTC]"
-          git push
+          git pull --rebase origin ${GITHUB_REF_NAME}
+          git push origin HEAD:${GITHUB_REF_NAME}

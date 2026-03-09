@@ -11,6 +11,7 @@ permissions:
 jobs:
   vpn-detector:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -176,4 +177,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add vpn_proxy_ranges.txt vpn_proxy_report.md
           git diff --staged --quiet || git commit -m "VPN & Proxy Ranges aktualisiert [$(date -u '+%Y-%m-%d %H:%M') UTC]"
-          git push
+          git pull --rebase origin ${GITHUB_REF_NAME}
+          git push origin HEAD:${GITHUB_REF_NAME}
