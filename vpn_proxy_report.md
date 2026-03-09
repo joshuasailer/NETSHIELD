@@ -1,5 +1,5 @@
 # VPN & Proxy Detector – Report
-**Aktualisiert:** 2026-03-08 15:45 UTC
+**Aktualisiert:** 2026-03-09 05:07 UTC
 
 ---
 ## Quellen
@@ -18,7 +18,7 @@
 | ✅ AWS IP Ranges | 14902 |
 | ❌ Azure IP Ranges | 0 |
 | ✅ DigitalOcean | 2116 |
-| ✅ Vultr | 862 |
+| ✅ Constant (Hosting) | 862 |
 | ❌ Hosting Providers (firehol) | 0 |
 
 ---
@@ -28,7 +28,7 @@
 |---|---|
 | VPN/Datacenter CIDRs | **56615** |
 | Proxy-IPs | **59381** |
-| Neu hinzugekommen | **115996** |
+| Neu hinzugekommen | **3651** |
 
 ---
-*Generiert: 2026-03-08 15:45 UTC*
+*Generiert: 2026-03-09 05:07 UTC*
