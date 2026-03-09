@@ -42,7 +42,7 @@ jobs:
           READ_LIMIT  = 25 * 1024 * 1024   # 25 MB pro Feed
 
           # ══════════════════════════════════════════════════════════════════
-          # SOURCES – 136 Feeds (Plan-Dokument + opnsense_raw_alias_links.txt)
+          # SOURCES – erweitert um die vom User gelieferten Links
           # Format: "name": ("url", hq_bool)
           # ══════════════════════════════════════════════════════════════════
           SOURCES = {
@@ -68,7 +68,7 @@ jobs:
               "cloudzy":                    ("https://raw.githubusercontent.com/CriticalPathSecurity/Public-Intelligence-Feeds/refs/heads/master/cloudzy.txt", True),
               "bbcan177":                   ("https://gist.githubusercontent.com/BBcan177/d7105c242f17f4498f81/raw", False),
               "kevinmarx":                  ("https://kevinmarx.org/malicious-ip-list.txt", False),
-              "honeypot_blocklist":         ("https://raw.githubusercontent.com/yuexuana521/honeypot-blocklist/refs/heads/main/ip_list.txt", False),
+              "honeypot_blocklist":         ("https://raw.githubusercontent.com/yuexuan521/honeypot-blocklist/refs/heads/main/ip_list.txt", False),
               "edanwong":                   ("https://raw.githubusercontent.com/EdanWong/ip_list/refs/heads/main/my_ips.txt", False),
               "nixbear_malicious":          ("https://raw.githubusercontent.com/nixbear/malicious_ips/refs/heads/main/malicious_ips.txt", False),
               "ufukart_blacklist":          ("https://raw.githubusercontent.com/ufukart/Blacklist/main/blacklist.txt", False),
@@ -99,9 +99,11 @@ jobs:
               "zerof_ipextractor":          ("https://raw.githubusercontent.com/ZEROF/ipextractor/refs/heads/main/ipexdbl.txt", False),
               "subnet_blocklist_new":       ("https://raw.githubusercontent.com/coyote-nl/blocklist/refs/heads/main/subnet-blocklist-new", False),
               "bdix_prefix_ipv4":           ("https://raw.githubusercontent.com/tushroy/bdix-isp-blocks/refs/heads/master/bdix-prefix_ipv4.txt", False),
+
               # ── Abuse.ch ──────────────────────────────────────────────────
               "urlhaus_ips":                ("https://urlhaus.abuse.ch/downloads/text/", True),
               "bazaar_c2":                  ("https://bazaar.abuse.ch/export/txt/cscb/recent/", False),
+
               # ── FireHOL & Emerging Threats ────────────────────────────────
               "firehol_level1":             ("https://iplists.firehol.org/files/firehol_level1.netset", True),
               "firehol_level2":             ("https://iplists.firehol.org/files/firehol_level2.netset", True),
@@ -124,12 +126,15 @@ jobs:
               "blocklist_de_apache":        ("https://lists.blocklist.de/lists/apache.txt", False),
               "blocklist_de_imap":          ("https://lists.blocklist.de/lists/imap.txt", False),
               "blocklist_de_ftp":           ("https://lists.blocklist.de/lists/ftp.txt", False),
+
               # ── C2 / Botnet ───────────────────────────────────────────────
               "c2_tracker":                 ("https://raw.githubusercontent.com/montysecurity/C2-Tracker/main/data/all.txt", True),
               "c2_iplist":                  ("https://raw.githubusercontent.com/drb-ra/C2IntelFeeds/master/feeds/IPC2s.csv", False),
               "cobalt_strike_ips":          ("https://raw.githubusercontent.com/Gi7w0rm/CobaltStrikeC2Tracker/main/lists/IPs.txt", False),
+
               # ── SSH / Brute-Force ─────────────────────────────────────────
               "stopforumspam_toxic":        ("https://www.stopforumspam.com/downloads/toxic_ip_cidr.txt", False),
+
               # ── Scanning / Recon ──────────────────────────────────────────
               "ipsum_level3":               ("https://raw.githubusercontent.com/stamparm/ipsum/master/levels/3.txt", False),
               "ipsum_level5":               ("https://raw.githubusercontent.com/stamparm/ipsum/master/levels/5.txt", False),
@@ -138,11 +143,13 @@ jobs:
               "shodan_scanners":            ("https://raw.githubusercontent.com/jgamblin/Shodan-Malware-Scanning-IPs/master/malware_ips.txt", False),
               "binaryedge_scanners":        ("https://raw.githubusercontent.com/stamparm/maltrail/master/trails/static/mass_scanner.txt", False),
               "normshield_ssh":             ("https://iplists.firehol.org/files/normshield_all_ssh.ipset", False),
+
               # ── Spam / Phishing ───────────────────────────────────────────
               "spamhaus_pbl":               ("https://raw.githubusercontent.com/elliotwutingfeng/Spamhaus-DNSBL-IPs/main/pbl.txt", False),
               "phishing_army":              ("https://phishing.army/download/phishing_army_blocklist.txt", False),
               "openphish":                  ("https://openphish.com/feed.txt", False),
               "pgl_yoyo_adservers":         ("https://pgl.yoyo.org/adservers/iplist.php?format=&showintro=0", False),
+
               # ── AbuseIPDB ─────────────────────────────────────────────────
               "abuseipdb_s100_30d":         ("https://raw.githubusercontent.com/borestad/blocklist-abuseipdb/main/abuseipdb-s100-30d.ipv4", True),
               "abuseipdb_s90_30d":          ("https://raw.githubusercontent.com/borestad/blocklist-abuseipdb/main/abuseipdb-s90-30d.ipv4", False),
@@ -151,6 +158,7 @@ jobs:
               "abuseipdb_score100":         ("https://raw.githubusercontent.com/LittleJake/ip-blacklist/refs/heads/main/abuseipdb_blacklist_ip_score_100.txt", True),
               "abuseipdb_scriptzteam":      ("https://raw.githubusercontent.com/scriptzteam/AbuseIPDB-BlackList/refs/heads/main/abuseipdb_blacklist.txt", False),
               "abuseipdb_axllent":          ("https://raw.githubusercontent.com/axllent/iplists/master/lists/abuseipdb-30d.txt", False),
+
               # ── Community / GitHub ────────────────────────────────────────
               "mrlooker_threats":           ("https://raw.githubusercontent.com/mrlooker/Suspicious-IPs/main/IPs.txt", False),
               "gridinsoft":                 ("https://raw.githubusercontent.com/GridinSoft/IP-Blocklist/main/ip-blocklist.txt", False),
@@ -161,6 +169,7 @@ jobs:
               "romainmarcoux_outgoing_aa":  ("https://raw.githubusercontent.com/romainmarcoux/malicious-outgoing-ip/main/full-outgoing-ip-aa.txt", False),
               "romainmarcoux_outgoing_ab":  ("https://raw.githubusercontent.com/romainmarcoux/malicious-outgoing-ip/main/full-outgoing-ip-ab.txt", False),
               "fullbogons_ipv4":            ("https://www.team-cymru.org/Services/Bogons/fullbogons-ipv4.txt", False),
+
               # ── Tor Exit Nodes ────────────────────────────────────────────
               "tor_project_bulk":           ("https://check.torproject.org/torbulkexitlist", True),
               "tor_danme":                  ("https://www.dan.me.uk/torlist/", True),
@@ -168,6 +177,7 @@ jobs:
               "tor_secops":                 ("https://raw.githubusercontent.com/SecOps-Institute/Tor-IP-Addresses/master/tor-exit-nodes.lst", True),
               "tor_neblink":                ("https://www.neblink.net/blocklist/TorExitNodes.txt", False),
               "tor_enkidu":                 ("https://raw.githubusercontent.com/Enkidu-6/tor-relay-lists/main/relays-v4.txt", False),
+
               # ── VPN / Proxy / Datacenter ──────────────────────────────────
               "vpn_protonvpn":              ("https://raw.githubusercontent.com/tn3w/ProtonVPN-IPs/refs/heads/master/protonvpn_ips.txt", False),
               "vpn_oooninja":               ("https://az0-vpnip-public.oooninja.com/ip.txt", False),
@@ -188,6 +198,7 @@ jobs:
               "dc_hexydec_datacentres":     ("https://raw.githubusercontent.com/hexydec/ip-ranges/main/output/datacentres.txt", False),
               "dc_painless_all_ipv4":       ("https://raw.githubusercontent.com/painlessanalytics/datacenter-cloud-ip-lists/refs/heads/main/lists/asn/all-ipv4.txt", False),
               "dc_123jjck_cdn":             ("https://raw.githubusercontent.com/123jjck/cdn-ip-ranges/refs/heads/main/all/all_plain_ipv4.txt", False),
+
               # ── GeoIP (optional, für Geo-Tagger) ─────────────────────────
               "geo_europe":                 ("https://raw.githubusercontent.com/antonme/GeoIP/refs/heads/master/europe.ipv4.cidr.txt", False),
               "geo_us":                     ("https://raw.githubusercontent.com/antonme/GeoIP/refs/heads/master/us.ipv4.cidr.txt", False),
@@ -388,7 +399,7 @@ if os.path.exists('seen_db.json'):
         db = json.load(f)
     meta['total_ips'] = len(db)
     meta['size_mb'] = round(os.path.getsize('seen_db.json') / 1024 / 1024, 1)
-    print(f'seen_db: {len(db)} IPs, {meta["size_mb"]} MB → nur Cache, kein Push')
+    print(f'seen_db: {len(db)} IPs, {meta[\"size_mb\"]} MB → nur Cache, kein Push')
 with open('seen_db_meta.json', 'w') as f:
     json.dump(meta, f, indent=2)
 "
