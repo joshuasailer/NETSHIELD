@@ -1,6 +1,6 @@
 # Bot Detector Blacklist
 # Source: github.com/lula73/bot-detector
-# Updated: 2026-03-09 06:39 UTC
+# Updated: 2026-03-09 12:00 UTC
 # Total IPs: 17954
 3.67.34.255
 108.130.81.67
