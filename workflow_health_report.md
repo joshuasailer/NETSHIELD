@@ -1,7 +1,7 @@
 # Workflow Health Checker – Report
-**Aktualisiert:** 2026-03-09 19:38 UTC
+**Aktualisiert:** 2026-03-09 19:40 UTC
 
-**Workflows:** 17 | ✅ 16 OK | ⚠️ 0 Warnung | ❌ 1 Fehler
+**Workflows:** 17 | ✅ 16 OK | ⚠️ 1 Warnung | ❌ 0 Fehler
 
 ---
 ## Übersicht
@@ -24,15 +24,15 @@
 | `update_combined_blacklist.yml` | ✅ OK | 0 | 0 | `0 0 * * *` |
 | `update_confidence_blacklist.yml` | ✅ OK | 0 | 0 | `15 0 * * *` |
 | `vpn_proxy_detector.yml` | ✅ OK | 0 | 0 | `30 3 * * 1` |
-| `workflow_health_checker.yml` | ❌ FEHLER | 1 | 1 | `0 1 * * *` |
+| `workflow_health_checker.yml` | ⚠️ WARNUNG | 0 | 1 | `0 1 * * *` |
 
 ---
-## ❌ Fehler im Detail
+## ⚠️ Warnungen im Detail
 
 ### `workflow_health_checker.yml`
 
-- 🔴 Zeile 142: `str(...).get(...)` – str hat kein .get(), führt zu AttributeError. Korrekt: `(dict_expr).get(...)`
+- 🟡 Zeile 165: `sorted(ips)` ohne `key=` – lexikografische Sortierung, nicht numerisch (z.B. '10.x' < '2.x'). Korrekt: `sorted(ips, key=lambda ip: tuple(int(o) for o in ip.split('.')))`
 
 
 ---
-*Generiert: 2026-03-09 19:38 UTC | 17 Workflow-Dateien geprüft*
+*Generiert: 2026-03-09 19:40 UTC | 17 Workflow-Dateien geprüft*
