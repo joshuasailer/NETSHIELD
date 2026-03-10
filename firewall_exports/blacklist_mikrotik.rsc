@@ -1,9 +1,3 @@
-# NETSHIELD Blacklist – Mikrotik RouterOS
-# Aktualisiert: 2026-03-08 18:12 UTC
-# Eintraege: 0
-# Import: /import file=blacklist_mikrotik.rsc
-
-# Bestehende Liste leeren
-/ip firewall address-list remove [find list=NETSHIELD_Blacklist]
-
-# Neue Eintraege hinzufuegen
+version https://git-lfs.github.com/spec/v1
+oid sha256:873aea72204d90d0937f772f3fc691d0da461821cc37214403b1c366c085cdb1
+size 224862288

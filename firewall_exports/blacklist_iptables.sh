@@ -1,11 +1,3 @@
-#!/bin/bash
-# NETSHIELD Blacklist – iptables
-# Aktualisiert: 2026-03-08 18:12 UTC | Eintraege: 0
-# Verwendung: sudo bash blacklist_iptables.sh
-
-# Bestehende NETSHIELD-Chain leeren
-iptables -F NETSHIELD 2>/dev/null || iptables -N NETSHIELD
-iptables -C INPUT -j NETSHIELD 2>/dev/null || iptables -I INPUT -j NETSHIELD
-iptables -C FORWARD -j NETSHIELD 2>/dev/null || iptables -I FORWARD -j NETSHIELD
-
-# Blacklist-Regeln
+version https://git-lfs.github.com/spec/v1
+oid sha256:34456d5b1bb6dafcbcb748ddec3b0c0cbb1095fed8656f627d44c73a9a095d39
+size 109270493
