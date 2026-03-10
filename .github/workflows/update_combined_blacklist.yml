@@ -53,6 +53,29 @@ jobs:
           DB_FILE     = "seen_db.json"
           READ_LIMIT  = 25 * 1024 * 1024   # 25 MB pro Feed
 
+          IPV4_RE = re.compile(r'(?<!\d)(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(?!\d)')
+
+          DNS_WHITELIST = {
+              "8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1",
+              "208.67.222.222", "208.67.220.220", "9.9.9.9",
+              "149.112.112.112", "94.140.14.14", "94.140.15.15",
+          }
+
+          HIGH_QUALITY = {
+              "cinsscore", "cinsarmy", "greensnow", "feodo_aggressive", "feodo_recommended",
+              "threatfox_ioc", "l7_ddos", "binary_defense", "crowdsec_ssh", "trcert_malware",
+              "danger_bruteforce", "threatview_high_conf", "firehol_cybercrime",
+              "firehol_anonymous", "dshield", "cloudzy", "netmountains_blocklist",
+              "urlhaus_ips", "firehol_level1", "firehol_level2", "firehol_level3",
+              "firehol_webclient", "firehol_webserver", "firehol_proxies", "firehol_abusers_1d",
+              "et_block", "et_compromised", "spamhaus_drop", "spamhaus_edrop",
+              "blocklist_de_all", "blocklist_de_export", "blocklist_de_strongips",
+              "blocklist_de_ssh", "c2_tracker", "c2_iplist", "cobalt_strike_ips",
+              "ipsum_level5", "ipsum_level7", "abuseipdb_s100_30d", "abuseipdb_s90_30d",
+              "abuseipdb_score100", "turris_greylist", "talos_intelligence",
+              "tor_project_bulk", "tor_danme", "tor_critpath", "tor_secops",
+          }
+
           # ══════════════════════════════════════════════════════════════════
           # SOURCES – erweitert um die vom User gelieferten Links
           # Format: "name": ("url", hq_bool)
@@ -189,7 +212,6 @@ jobs:
               "tor_secops":                 ("https://raw.githubusercontent.com/SecOps-Institute/Tor-IP-Addresses/master/tor-exit-nodes.lst", True),
               "tor_neblink":                ("https://www.neblink.net/blocklist/TorExitNodes.txt", False),
               "tor_enkidu":                 ("https://raw.githubusercontent.com/Enkidu-6/tor-relay-lists/main/relays-v4.txt", False),
-          }
 
           # ── seen_db laden ──────────────────────────────────────────────────
           db = {}
