@@ -6,6 +6,9 @@ on:
     - cron: '0 3 * * 3'  # Jeden Mittwoch um 03:00 UTC
   workflow_dispatch:       # Auch manuell per Knopfdruck auslösbar
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   contents: write
   actions: read
