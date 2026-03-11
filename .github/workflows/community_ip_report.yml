@@ -33,8 +33,9 @@ jobs:
         uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         with:
           path: seen_db.json
-          key: netshield-seen-db-v1
+          key: netshield-seen-db-v1-latest
           restore-keys: |
+            netshield-seen-db-v1-
             netshield-seen-db-
 
       - name: Process Community Report
@@ -145,18 +146,29 @@ jobs:
           action = ""
           if ip in db:
               # IP existiert bereits → last_seen aktualisieren + community-Flag
-              db[ip]["last"]      = now_day
-              db[ip]["hq"]        = True   # Community-Bestätigung = HQ
-              db[ip]["community"] = db[ip].get("community", 0) + 1
+              # days_seen erhöhen wenn echter neuer Tag (nicht mehrmals täglich zählen)
+              prev_last = db[ip].get("last", "2000-01-01")
+              db[ip]["last"]        = now_day
+              db[ip]["hq"]          = True   # Community-Bestätigung = HQ
+              db[ip]["community"]   = db[ip].get("community", 0) + 1
+              db[ip]["today_hq"]    = True
+              db[ip]["today_count"] = db[ip].get("today_count", 0)
+              if prev_last != now_day:
+                  db[ip]["days_seen"] = db[ip].get("days_seen", 0) + 1
               action = "UPDATED"
               print(f"IP {ip} bereits bekannt – auf HQ=True gesetzt, community+1")
           else:
-              # Neue IP → neu eintragen mit community-Flag
+              # Neue IP → neu eintragen mit allen Schema-Feldern
               db[ip] = {
-                  "first":     now_day,
-                  "last":      now_day,
-                  "hq":        False,   # Neu: erstmal watchlist, kein HQ
-                  "community": 1,
+                  "first":       now_day,
+                  "last":        now_day,
+                  "hq":          False,   # Neu: erstmal watchlist, kein HQ
+                  "community":   1,
+                  "feeds":       ["community_report"],
+                  "hq_feeds":    0,
+                  "today_count": 1,
+                  "today_hq":    False,
+                  "days_seen":   1,
               }
               action = "NEW"
               print(f"Neue IP {ip} als Community-Report eingetragen (Watchlist)")

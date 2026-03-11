@@ -35,8 +35,9 @@ jobs:
         uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         with:
           path: seen_db.json
-          key: netshield-seen-db-v1
+          key: netshield-seen-db-v1-latest
           restore-keys: |
+            netshield-seen-db-v1-
             netshield-seen-db-
 
       - name: Run Score Decay Analysis
@@ -77,14 +78,18 @@ jobs:
               last_seen  = data.get("last",  "2000-01-01")
               first_seen = data.get("first", last_seen)
               is_hq      = data.get("hq", False)
+              days_seen  = data.get("days_seen", 0)  # Anzahl Tage mit echter Bestätigung
               try:
                   last_dt  = datetime.strptime(last_seen,  "%Y-%m-%d").replace(tzinfo=timezone.utc)
                   first_dt = datetime.strptime(first_seen, "%Y-%m-%d").replace(tzinfo=timezone.utc)
               except:
                   continue
               days_ago    = (now - last_dt).days
-              days_active = (last_dt - first_dt).days + 1
-              score       = days_active + (20 if is_hq else 0)
+              # Score basiert auf echten Bestätigungstagen (days_seen) + HQ-Bonus
+              # Fallback auf days_active für alte Einträge ohne days_seen
+              if days_seen == 0:
+                  days_seen = (last_dt - first_dt).days + 1
+              score       = days_seen + (20 if is_hq else 0)
               score_dist[(score // 5) * 5] += 1
 
               if days_ago <= 7:

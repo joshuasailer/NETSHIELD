@@ -373,8 +373,8 @@ jobs:
                   if strongly_confirmed_today:
                       prev_last = db[ip].get("last", "2000-01-01")
                       if prev_last != now_day:
-                          # Neuer Bestätigungstag → days_seen erhöhen
-                          db[ip]["days_seen"] = db[ip].get("days_seen", 1) + 1
+                          # Neuer Bestätigungstag → days_seen erhöhen (startet bei 0)
+                          db[ip]["days_seen"] = db[ip].get("days_seen", 0) + 1
                       db[ip]["last"] = now_day
 
                   db[ip]["feeds"]       = sorted(existing_feeds | today_feeds)
