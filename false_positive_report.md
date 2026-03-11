@@ -1,15 +1,15 @@
 # False Positive Checker – Report
-**Aktualisiert:** 2026-03-11 06:56 UTC
+**Aktualisiert:** 2026-03-11 14:38 UTC
 
 ---
 ## Ergebnis
 
 | Metrik | Wert |
 |---|---|
-| Geprüfte IPs (gesamt) | 2798812 |
-| Whitelist-Treffer | **19158** |
+| Geprüfte IPs (gesamt) | 2798101 |
+| Whitelist-Treffer | **19205** |
 | Reverse-DNS legitim | **0** |
-| Gesamt entfernt | **19158** |
+| Gesamt entfernt | **19205** |
 
 ## Whitelist-Treffer
 
@@ -37,4 +37,4 @@
 | `104.21.21.241` | Bekannte legitime IP-Range (CDN/Cloud) |
 
 ---
-*Generiert: 2026-03-11 06:56 UTC*
+*Generiert: 2026-03-11 14:38 UTC*
