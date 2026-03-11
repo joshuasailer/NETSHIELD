@@ -72,7 +72,7 @@ jobs:
               db = json.load(f)
           print(f"seen_db geladen: {len(db)} IPs")
 
-          # Alter der seen_db prüfen – warnen wenn zu alt
+          # Alter der seen_db prüfen
           newest_last = max((d.get("last","2000-01-01") for d in db.values()), default="2000-01-01")
           try:
               newest_dt = datetime.strptime(newest_last, "%Y-%m-%d").replace(tzinfo=timezone.utc)
@@ -91,29 +91,58 @@ jobs:
               combined_ips = {l.strip() for l in f if l.strip() and not l.startswith("#")}
           print(f"Combined Blacklist: {len(combined_ips)} IPs")
 
-          # ── Konfidenz-Berechnung ──────────────────────────────────────────
+          # ══════════════════════════════════════════════════════════════════
+          # KONFIDENZ-MODELL
           #
-          # Basis-Score:
-          #   HQ-Feed (hq=True)          → 60
-          #   Non-HQ mit 3+ Feeds        → 45   ← NEU: Stufen statt pauschal 40
-          #   Non-HQ mit 2 Feeds         → 35
-          #   Non-HQ mit 1 Feed          → 20
+          # confidence40 = qualitativ beste Liste, wenig False Positives
+          # watchlist    = neue/unsichere Bedrohungen, höheres FP-Risiko
           #
-          # Aktivitäts-Bonus (addiert):
-          #   Letzte Aktivität ≤ 3 Tage  → +25
-          #   Letzte Aktivität ≤ 7 Tage  → +20
-          #   Letzte Aktivität ≤ 14 Tage → +15
-          #   Letzte Aktivität ≤ 30 Tage → +10
-          #   Letzte Aktivität > 30 Tage → +0
+          # Score setzt sich aus 4 unabhängigen Dimensionen zusammen:
           #
-          # Persistenz-Bonus (addiert):
-          #   Bekannt ≥ 60 Tage          → +15
-          #   Bekannt ≥ 30 Tage          → +10
-          #   Bekannt ≥ 14 Tage          → +5
+          # [A] QUELLEN-QUALITÄT (max. 40 Punkte) – wie vertrauenswürdig sind
+          #     die Feeds die diese IP gemeldet haben?
+          #       hq=True (je in einem HQ-Feed)          → 40
+          #       today_count >= 5 (heute 5+ Feeds)      → 35
+          #       today_count >= 3 (heute 3+ Feeds)      → 28
+          #       today_count >= 2 (heute 2+ Feeds)      → 20
+          #       feed_count >= 5 (akkum. 5+ Feeds)      → 15
+          #       feed_count >= 3 (akkum. 3+ Feeds)      → 10
+          #       feed_count >= 2 (akkum. 2 Feeds)       →  5
+          #       1 Feed total                            →  0
           #
-          # Ziel: conf ≥ 40 → blacklist_confidence40
-          #        conf 20–39 → watchlist_confidence20to39
-          #        conf < 20  → ignoriert (noch nicht ausreichend bestätigt)
+          # [B] AKTUALITÄT (max. 30 Punkte) – wie frisch ist die letzte
+          #     *starke* Bestätigung? ("last" wurde oben nur gesetzt wenn
+          #     2+ Feeds oder 1 HQ-Feed an diesem Tag)
+          #       last_seen ≤ 1 Tag   → 30
+          #       last_seen ≤ 3 Tage  → 25
+          #       last_seen ≤ 7 Tage  → 20
+          #       last_seen ≤ 14 Tage → 12
+          #       last_seen ≤ 30 Tage →  6
+          #       last_seen > 30 Tage →  0
+          #
+          # [C] PERSISTENZ (max. 20 Punkte) – wurde die IP über mehrere Tage
+          #     unabhängig bestätigt? (days_seen = Anzahl verschiedener Tage
+          #     an denen "stark bestätigt" wurde)
+          #       days_seen >= 14     → 20
+          #       days_seen >= 7      → 15
+          #       days_seen >= 3      → 10
+          #       days_seen >= 2      →  6
+          #       days_seen == 1      →  2
+          #
+          # [D] BEKANNT SEIT (max. 10 Punkte) – wie lange ist die IP schon
+          #     im System?
+          #       bekannt ≥ 90 Tage   → 10
+          #       bekannt ≥ 30 Tage   →  6
+          #       bekannt ≥ 14 Tage   →  3
+          #       bekannt < 14 Tage   →  0
+          #
+          # Gesamt max. 100 Punkte.
+          # Schwellwerte:
+          #   conf >= 50 → blacklist_confidence40 (umbenannt zu _confidence50 wäre
+          #                besser, aber Dateiname bleibt für Kompatibilität)
+          #   conf 25–49 → watchlist
+          #   conf < 25  → ignoriert
+          # ══════════════════════════════════════════════════════════════════
 
           confidence40 = []
           confidence20 = []
@@ -125,6 +154,9 @@ jobs:
 
               is_hq       = data.get("hq", False)
               feed_count  = len(data.get("feeds", []))
+              today_count = data.get("today_count", 0)
+              today_hq    = data.get("today_hq", False)
+              days_seen   = data.get("days_seen", 1)
               last_seen   = data.get("last",  "2000-01-01")
               first_seen  = data.get("first", last_seen)
 
@@ -136,66 +168,92 @@ jobs:
                   continue
 
               days_since_last = (now - last_dt).days
-              days_known      = (last_dt - first_dt).days + 1
+              days_known      = (now - first_dt).days + 1
 
-              # Basis
+              # [A] Quellen-Qualität
               if is_hq:
-                  conf = 60
+                  score_a = 40
+              elif today_count >= 5:
+                  score_a = 35
+              elif today_count >= 3:
+                  score_a = 28
+              elif today_count >= 2:
+                  score_a = 20
+              elif feed_count >= 5:
+                  score_a = 15
               elif feed_count >= 3:
-                  conf = 45
+                  score_a = 10
               elif feed_count >= 2:
-                  conf = 35
+                  score_a = 5
               else:
-                  conf = 20
+                  score_a = 0
 
-              # Aktivitäts-Bonus
-              if days_since_last <= 3:
-                  conf += 25
+              # [B] Aktualität
+              if days_since_last <= 1:
+                  score_b = 30
+              elif days_since_last <= 3:
+                  score_b = 25
               elif days_since_last <= 7:
-                  conf += 20
+                  score_b = 20
               elif days_since_last <= 14:
-                  conf += 15
+                  score_b = 12
               elif days_since_last <= 30:
-                  conf += 10
-              # > 30 Tage: kein Bonus
+                  score_b = 6
+              else:
+                  score_b = 0
 
-              # Persistenz-Bonus
-              if days_known >= 60:
-                  conf += 15
+              # [C] Persistenz (Multi-Tag-Bestätigung)
+              if days_seen >= 14:
+                  score_c = 20
+              elif days_seen >= 7:
+                  score_c = 15
+              elif days_seen >= 3:
+                  score_c = 10
+              elif days_seen >= 2:
+                  score_c = 6
+              else:
+                  score_c = 2
+
+              # [D] Bekannt seit
+              if days_known >= 90:
+                  score_d = 10
               elif days_known >= 30:
-                  conf += 10
+                  score_d = 6
               elif days_known >= 14:
-                  conf += 5
+                  score_d = 3
+              else:
+                  score_d = 0
 
-              conf = min(conf, 100)
+              conf = min(score_a + score_b + score_c + score_d, 100)
 
-              if conf >= 40:
+              if conf >= 50:
                   confidence40.append((ip, conf))
-              elif conf >= 20:
+              elif conf >= 25:
                   confidence20.append((ip, conf))
 
           confidence40.sort(key=lambda x: (-x[1], x[0]))
           confidence20.sort(key=lambda x: (-x[1], x[0]))
 
-          print(f"Konfidenz ≥40%:   {len(confidence40)} IPs")
-          print(f"Konfidenz 20-39%: {len(confidence20)} IPs")
-          print(f"Übersprungen:     {skipped} IPs (Datumsfehler)")
+          print(f"Konfidenz ≥50 (→ confidence40-Datei): {len(confidence40)} IPs")
+          print(f"Konfidenz 25-49 (→ watchlist):         {len(confidence20)} IPs")
+          print(f"Übersprungen:                          {skipped} IPs (Datumsfehler)")
 
           with open(OUT_40, "w") as f:
-              f.write(f"# NETSHIELD Blacklist – Hohe Konfidenz (≥40%)\n")
+              f.write(f"# NETSHIELD Blacklist – Hohe Konfidenz (Score ≥50/100)\n")
               f.write(f"# Aktualisiert: {now_str}\n")
+              f.write(f"# Scoring: Quellen-Qualität(40) + Aktualität(30) + Persistenz(20) + Alter(10)\n")
               f.write(f"# Eintraege: {len(confidence40)}\n\n")
               for ip, conf in confidence40:
                   f.write(f"{ip}\n")
 
           with open(OUT_WATCH, "w") as f:
-              f.write(f"# NETSHIELD Watchlist – Mittlere Konfidenz (20-39%)\n")
+              f.write(f"# NETSHIELD Watchlist – Mittlere Konfidenz (Score 25-49/100)\n")
               f.write(f"# Aktualisiert: {now_str}\n")
               f.write(f"# Eintraege: {len(confidence20)}\n\n")
               for ip, conf in confidence20:
                   f.write(f"{ip}\n")
 
-          print(f"Fertig: {len(confidence40)} IPs (≥40%) | {len(confidence20)} IPs (20-39%)")
+          print(f"Fertig: {len(confidence40)} IPs (conf40) | {len(confidence20)} IPs (watchlist)")
           EOF
 
       - name: Commit

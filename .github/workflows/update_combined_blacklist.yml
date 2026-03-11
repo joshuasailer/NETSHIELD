@@ -338,22 +338,63 @@ jobs:
           else:
               print(f"  SKIP: {AUTO_FEEDS_FILE} nicht vorhanden")
 
-          # ── Nur valide IPs in seen_db aufnehmen ──────────────────────────
-          # Kriterium jetzt: akkumulierte Feeds >= 2 ÜBER ALLE RUNS HINWEG oder HQ
+          # ── seen_db aktualisieren ─────────────────────────────────────────
+          #
+          # Felder pro IP:
+          #   first        – erster Sichttag (unveränderlich)
+          #   last         – letzter Tag an dem die IP "stark bestätigt" war:
+          #                  >= 2 verschiedene Feeds HEUTE oder mindestens 1 HQ-Feed HEUTE
+          #                  Statische Mega-Listen (romainmarcoux 300k etc.) die sich
+          #                  nicht täglich ändern, aktualisieren "last" NICHT alleine.
+          #   hq           – True wenn IP je in einem HQ-Feed gesehen wurde
+          #   feeds        – akkumulierte Feed-Namen (für Persistenz-Score)
+          #   hq_feeds     – Anzahl verschiedener HQ-Feeds die diese IP je gemeldet haben
+          #   today_count  – Anzahl Feeds die diese IP im LETZTEN RUN gemeldet haben
+          #                  (wird bei jedem Run überschrieben, kein Akkumulieren)
+          #   today_hq     – True wenn mindestens 1 HQ-Feed diese IP heute gemeldet hat
+          #   days_seen    – Anzahl verschiedener Tage an denen "stark bestätigt" wurde
+          #                  (echter Multi-Tag-Bestätigungszähler)
+          #
+          # "last" NUR aktualisieren wenn heute stark bestätigt:
+
           for ip, today_feeds in ip_feeds_today.items():
+              today_count = len(today_feeds)
+              today_is_hq = ip in ip_in_hq
+              # "Stark bestätigt" = heute in 2+ Feeds ODER in 1+ HQ-Feed
+              strongly_confirmed_today = today_count >= 2 or today_is_hq
+
+              # HQ-Feed-Anzahl für diese IP heute
+              hq_feed_names_today = today_feeds & HIGH_QUALITY
+
               if ip in db:
-                  db[ip]["last"] = now_day
-                  # Feeds akkumulieren
-                  existing = set(db[ip].get("feeds", []))
-                  db[ip]["feeds"] = sorted(existing | today_feeds)
-                  if ip in ip_in_hq:
+                  existing_feeds = set(db[ip].get("feeds", []))
+                  new_feeds = today_feeds - existing_feeds
+
+                  if strongly_confirmed_today:
+                      prev_last = db[ip].get("last", "2000-01-01")
+                      if prev_last != now_day:
+                          # Neuer Bestätigungstag → days_seen erhöhen
+                          db[ip]["days_seen"] = db[ip].get("days_seen", 1) + 1
+                      db[ip]["last"] = now_day
+
+                  db[ip]["feeds"]       = sorted(existing_feeds | today_feeds)
+                  db[ip]["today_count"] = today_count
+                  db[ip]["today_hq"]    = today_is_hq
+                  if today_is_hq:
                       db[ip]["hq"] = True
+                  # HQ-Feed-Zähler akkumulieren
+                  prev_hq = db[ip].get("hq_feeds", 0)
+                  db[ip]["hq_feeds"] = prev_hq + len(hq_feed_names_today)
               else:
                   db[ip] = {
-                      "first": now_day,
-                      "last":  now_day,
-                      "hq":    ip in ip_in_hq,
-                      "feeds": sorted(today_feeds),
+                      "first":       now_day,
+                      "last":        now_day if strongly_confirmed_today else "2000-01-01",
+                      "hq":          today_is_hq,
+                      "feeds":       sorted(today_feeds),
+                      "hq_feeds":    len(hq_feed_names_today),
+                      "today_count": today_count,
+                      "today_hq":    today_is_hq,
+                      "days_seen":   1 if strongly_confirmed_today else 0,
                   }
 
           # Aufnahme-Filter: mindestens 2 verschiedene Feeds (gesamt) oder HQ
@@ -361,9 +402,6 @@ jobs:
               ip for ip, data in db.items()
               if len(data.get("feeds", [])) >= 2 or data.get("hq")
           }
-          # IPs die das Kriterium noch nicht erfüllen aus db entfernen
-          # (sie wurden oben temporär eingefügt, werden aber erst behalten
-          #  wenn sie das Kriterium erfüllen)
           for ip in list(db.keys()):
               if ip not in current_valid:
                   del db[ip]
@@ -398,16 +436,16 @@ jobs:
               f.write(f"# Abgelaufen entfernt: {len(expired)}\n\n")
               f.write("\n".join(sorted_ips) + "\n")
 
-          # ── Stufe 2: active_blacklist_ipv4.txt (30 Tage, 2+ Feeds oder HQ) ─
+          # ── Stufe 2: active_blacklist_ipv4.txt (30 Tage echte Bestätigung) ──
+          # "last" ist jetzt nur gesetzt wenn IP wirklich stark bestätigt wurde
+          # (2+ Feeds oder 1 HQ-Feed an diesem Tag). Statische Listen reichen
+          # alleine nicht aus um "last" zu aktualisieren.
           cutoff_30 = now - timedelta(days=30)
           active_ips = []
           for ip, data in db.items():
               try:
                   last_dt = datetime.strptime(data["last"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
-                  # Kriterium: in den letzten 30 Tagen gesehen UND
-                  # mindestens 2 verschiedene Feeds (akkumuliert) oder HQ
-                  feed_count = len(data.get("feeds", []))
-                  if last_dt >= cutoff_30 and (data.get("hq") or feed_count >= 2):
+                  if last_dt >= cutoff_30:
                       active_ips.append(ip)
               except Exception:
                   pass
