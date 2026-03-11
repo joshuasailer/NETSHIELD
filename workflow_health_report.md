@@ -1,7 +1,7 @@
 # Workflow Health Checker – Report
-**Aktualisiert:** 2026-03-11 20:13 UTC
+**Aktualisiert:** 2026-03-11 20:20 UTC
 
-**Workflows:** 18 | ✅ 14 OK | ⚠️ 0 Warnung | ❌ 4 Fehler
+**Workflows:** 18 | ✅ 15 OK | ⚠️ 0 Warnung | ❌ 3 Fehler
 
 ---
 ## Übersicht
@@ -18,7 +18,7 @@
 | `firewall_format_exporter.yml` | ✅ OK | 0 | 0 | `30 0 * * *` |
 | `geo_tagger.yml` | ❌ FEHLER | 1 | 0 | `30 6 * * 0` |
 | `netshield_report_generator.yml` | ✅ OK | 0 | 0 | `50 0 * * *` |
-| `score_decay_monitor.yml` | ❌ FEHLER | 1 | 0 | `0 7 * * 0` |
+| `score_decay_monitor.yml` | ✅ OK | 0 | 0 | `0 7 * * 0` |
 | `tor_exit_monitor.yml` | ✅ OK | 0 | 0 | `30 23 * * *` |
 | `update-blocklist.yml` | ✅ OK | 0 | 0 | `30 2 * * 1`, `30 2 * * 3` |
 | `update_bot_detector.yml` | ✅ OK | 0 | 0 | `45 23 * * *` |
@@ -38,14 +38,10 @@
 
 - 🔴 [AUDIT-TIMING] Zeitkonflikt erkannt: `30 6 * * 0` – 06:00 UTC Sonntag – Überschneidung mit false_positive_checker + combined. Fix: `30 6 * * 0` (06:30 UTC)
 
-### `score_decay_monitor.yml`
-
-- 🔴 [AUDIT-BUG-2] seen_db.json wird per json.dump() geschrieben, aber fehlt im `git add`-Befehl. Fällt der GitHub-Cache nach 7 Tagen weg, gehen alle Änderungen (z.B. Community-Reports) dauerhaft verloren. Fix: `git add ... seen_db.json` ergänzen.
-
 ### `update_combined_blacklist.yml`
 
 - 🔴 [AUDIT-BUG-2] seen_db.json wird per json.dump() geschrieben, aber fehlt im `git add`-Befehl. Fällt der GitHub-Cache nach 7 Tagen weg, gehen alle Änderungen (z.B. Community-Reports) dauerhaft verloren. Fix: `git add ... seen_db.json` ergänzen.
 
 
 ---
-*Generiert: 2026-03-11 20:13 UTC | 18 Workflow-Dateien geprüft*
+*Generiert: 2026-03-11 20:20 UTC | 18 Workflow-Dateien geprüft*
