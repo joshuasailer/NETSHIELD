@@ -1,0 +1,248 @@
+name: AbuseIPDB Feed
+
+on:
+  schedule:
+    - cron: '0 23 * * *'   # täglich 23:00 UTC (1h vor Combined um 00:00)
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: write
+  actions: read
+  issues: none
+  packages: none
+  pull-requests: none
+  security-events: none
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  abuseipdb-feed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: true
+
+      - name: Restore seen_db Cache
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        with:
+          path: seen_db.json
+          key: netshield-seen-db-v1-latest
+          restore-keys: |
+            netshield-seen-db-v1-
+            netshield-seen-db-
+
+      - name: Fetch AbuseIPDB Blacklists
+        env:
+          ABUSEIPDB: ${{ secrets.ABUSEIPDB }}
+        run: |
+          python3 << 'EOF'
+          import urllib.request
+          import urllib.error
+          import json
+          import os
+          import time
+          from datetime import datetime, timezone
+
+          now     = datetime.now(timezone.utc)
+          now_str = now.strftime("%Y-%m-%d %H:%M UTC")
+          now_day = now.strftime("%Y-%m-%d")
+
+          DB_FILE = "seen_db.json"
+
+          # ── API-Keys aus Secret (kommagetrennt: key1,key2,key3) ───────────
+          raw_keys = os.environ.get("ABUSEIPDB", "")
+          keys = [k.strip() for k in raw_keys.split(",") if k.strip()]
+
+          if len(keys) < 3:
+              print(f"WARNUNG: {len(keys)} Key(s) gefunden - erwartet 3 (kommagetrennt im Secret ABUSEIPDB)")
+
+          CONFIDENCE_LEVELS = [
+              {"confidence": 100, "label": "abuseipdb_conf100", "hq": True},
+              {"confidence": 90,  "label": "abuseipdb_conf90",  "hq": False},
+              {"confidence": 75,  "label": "abuseipdb_conf75",  "hq": False},
+          ]
+
+          FEEDS = []
+          for i, level in enumerate(CONFIDENCE_LEVELS):
+              FEEDS.append({
+                  "key":        keys[i] if i < len(keys) else "",
+                  "confidence": level["confidence"],
+                  "label":      level["label"],
+                  "hq":         level["hq"],
+              })
+
+          def fetch_blacklist(api_key, confidence_min, limit=10000):
+              """Ruft die AbuseIPDB Blacklist ab – zaehlt als 1 Request."""
+              if not api_key:
+                  print(f"  UEBERSPRUNGEN: Kein API-Key gesetzt")
+                  return []
+              url = (
+                  f"https://api.abuseipdb.com/api/v2/blacklist"
+                  f"?confidenceMinimum={confidence_min}&limit={limit}&plaintext=0"
+              )
+              try:
+                  req = urllib.request.Request(
+                      url,
+                      headers={
+                          "Key":    api_key,
+                          "Accept": "application/json",
+                      }
+                  )
+                  with urllib.request.urlopen(req, timeout=30) as r:
+                      data = json.loads(r.read().decode("utf-8"))
+                  ips = [entry["ipAddress"] for entry in data.get("data", []) if "ipAddress" in entry]
+                  return ips
+              except urllib.error.HTTPError as e:
+                  body = e.read().decode("utf-8", errors="ignore")
+                  print(f"  HTTP-FEHLER {e.code}: {body[:200]}")
+                  return []
+              except Exception as e:
+                  print(f"  FEHLER: {e}")
+                  return []
+
+          # ── seen_db laden ─────────────────────────────────────────────────
+          db = {}
+          if os.path.exists(DB_FILE):
+              try:
+                  with open(DB_FILE) as f:
+                      db = json.load(f)
+                  print(f"seen_db geladen: {len(db)} IPs")
+              except Exception:
+                  db = {}
+          else:
+              print("seen_db nicht gefunden - starte neu")
+
+          # ── Alle 3 Feeds abrufen & seen_db aktualisieren ──────────────────
+          stats = {}
+          all_feed_ips = set()
+
+          for feed in FEEDS:
+              label      = feed["label"]
+              confidence = feed["confidence"]
+              is_hq      = feed["hq"]
+
+              print(f"\nLade {label} (confidence>={confidence})...")
+              ips = fetch_blacklist(feed["key"], confidence)
+              stats[label] = {"fetched": len(ips), "new": 0, "updated": 0}
+
+              if not ips:
+                  print(f"  0 IPs erhalten")
+                  continue
+
+              print(f"  {len(ips)} IPs erhalten")
+              all_feed_ips.update(ips)
+
+              for ip in ips:
+                  if ip in db:
+                      prev_last = db[ip].get("last", "2000-01-01")
+                      db[ip]["last"] = now_day
+                      if is_hq:
+                          db[ip]["hq"]       = True
+                          db[ip]["today_hq"] = True
+                      feeds_list = db[ip].get("feeds", [])
+                      if label not in feeds_list:
+                          feeds_list.append(label)
+                          db[ip]["feeds"] = feeds_list
+                      db[ip]["today_count"] = db[ip].get("today_count", 0) + 1
+                      if prev_last != now_day:
+                          db[ip]["days_seen"] = db[ip].get("days_seen", 0) + 1
+                      stats[label]["updated"] += 1
+                  else:
+                      db[ip] = {
+                          "first":       now_day,
+                          "last":        now_day,
+                          "hq":          is_hq,
+                          "feeds":       [label],
+                          "hq_feeds":    1 if is_hq else 0,
+                          "today_count": 1,
+                          "today_hq":    is_hq,
+                          "days_seen":   1,
+                      }
+                      stats[label]["new"] += 1
+
+              time.sleep(1)
+
+          # ── seen_db speichern ─────────────────────────────────────────────
+          with open(DB_FILE, "w") as f:
+              json.dump(db, f, separators=(",", ":"))
+          print(f"\nseen_db gespeichert: {len(db)} IPs gesamt")
+
+          # ── AbuseIPDB-Rohdatei schreiben ──────────────────────────────────
+          sorted_ips = sorted(all_feed_ips, key=lambda ip: tuple(int(o) for o in ip.split(".")))
+          with open("abuseipdb_blacklist.txt", "w", encoding="utf-8") as f:
+              f.write(f"# AbuseIPDB Blacklist - NETSHIELD\n")
+              f.write(f"# Aktualisiert: {now_str}\n")
+              f.write(f"# Feeds: conf100 (HQ) + conf90 + conf75\n")
+              f.write(f"# Gesamt einzigartige IPs: {len(sorted_ips)}\n\n")
+              f.write("\n".join(sorted_ips) + "\n")
+          print(f"abuseipdb_blacklist.txt: {len(sorted_ips)} IPs")
+
+          # ── Report ────────────────────────────────────────────────────────
+          total_new     = sum(s["new"]     for s in stats.values())
+          total_updated = sum(s["updated"] for s in stats.values())
+
+          lines = []
+          lines.append("# AbuseIPDB Feed - Report")
+          lines.append(f"**Aktualisiert:** {now_str}\n")
+          lines.append("---")
+          lines.append("## Feed-Statistik\n")
+          lines.append("| Feed | Confidence | IPs abgerufen | Neu in DB | Aktualisiert |")
+          lines.append("|---|---|---|---|---|")
+          for feed in FEEDS:
+              label = feed["label"]
+              s = stats.get(label, {"fetched": 0, "new": 0, "updated": 0})
+              hq_badge = " HQ" if feed["hq"] else ""
+              icon = "OK" if s["fetched"] > 0 else "FEHLER"
+              lines.append(
+                  f"| {icon} `{label}`{hq_badge} | >={feed['confidence']}% "
+                  f"| {s['fetched']:,} | +{s['new']:,} | ~{s['updated']:,} |"
+              )
+          lines.append("")
+          lines.append("---")
+          lines.append("## Zusammenfassung\n")
+          lines.append(f"| Metrik | Wert |")
+          lines.append(f"|---|---|")
+          lines.append(f"| Einzigartige IPs (alle Feeds) | **{len(sorted_ips):,}** |")
+          lines.append(f"| Neu in seen_db eingetragen | **+{total_new:,}** |")
+          lines.append(f"| Bestehende IPs aktualisiert | **~{total_updated:,}** |")
+          lines.append(f"| seen_db Gesamt | **{len(db):,}** |")
+          lines.append(f"\n---\n*Generiert: {now_str}*")
+
+          with open("abuseipdb_report.md", "w", encoding="utf-8") as f:
+              f.write("\n".join(lines))
+          print("abuseipdb_report.md geschrieben")
+          EOF
+
+      - name: Save seen_db Cache
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        with:
+          path: seen_db.json
+          key: netshield-seen-db-v1-${{ github.run_id }}
+
+      - name: Save seen_db Cache (latest alias)
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        with:
+          path: seen_db.json
+          key: netshield-seen-db-v1-latest
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add abuseipdb_blacklist.txt abuseipdb_report.md seen_db.json
+          if git diff --staged --quiet; then
+            echo "Keine Aenderungen"
+          else
+            git commit -m "AbuseIPDB Feed: $(date -u '+%Y-%m-%d %H:%M') UTC"
+            git pull --rebase origin ${GITHUB_REF_NAME}
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
