@@ -1,22 +1,22 @@
 # Tor Exit Node Monitor – Report
-**Aktualisiert:** 2026-03-10 23:47 UTC
+**Aktualisiert:** 2026-03-11 23:46 UTC
 
 ---
 | Quelle | IPs |
 |---|---|
-| ✅ `tor_project_bulk` | 1201 |
-| ✅ `tor_danme` | 7263 |
-| ✅ `tor_critpath` | 1201 |
+| ✅ `tor_project_bulk` | 1207 |
+| ✅ `tor_danme` | 7239 |
+| ✅ `tor_critpath` | 1207 |
 | ✅ `tor_secops` | 1127 |
-| ✅ `tor_neblink` | 1220 |
-| ✅ `tor_enkidu` | 7253 |
+| ✅ `tor_neblink` | 1221 |
+| ✅ `tor_enkidu` | 7218 |
 
 ---
 | Metrik | Wert |
 |---|---|
-| Gesamt aktive Exit-Nodes | **7927** |
-| Neu | **+156** |
-| Entfernt | **-153** |
+| Gesamt aktive Exit-Nodes | **7891** |
+| Neu | **+129** |
+| Entfernt | **-165** |
 
 ---
-*Generiert: 2026-03-10 23:47 UTC*
+*Generiert: 2026-03-11 23:46 UTC*
