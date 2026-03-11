@@ -1,4 +1,5 @@
 
+
 <div align="center">
 
 # 🛡️ NETSHIELD
@@ -67,6 +68,7 @@ Die Nutzung ist bewusst einfach gehalten:
 | [tor_exit_nodes.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/tor_exit_nodes.txt) | Tor Exit Nodes aus 6 Quellen | täglich |
 | [cve_exploit_ips.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/cve_exploit_ips.txt) | IPs mit Bezug zu aktiver Exploit-Aktivität (C2, Feodo, ThreatFox) | täglich |
 | [vpn_proxy_ranges.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/vpn_proxy_ranges.txt) | VPN-, Proxy- und Anonymisierungs-Ranges | wöchentlich |
+| [abuseipdb_api_blacklist.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/abuseipdb_api_blacklist.txt) | AbuseIPDB Live-API – Community-gemeldete IPs (Score ≥ 50, bis zu 10.000 IPs) | alle 3 Stunden |
 | [asn_blocklist_firewall.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/asn_blocklist_firewall.txt) | Netzwerke mit schlechter Reputation (ASN-Ebene) | täglich |
 
 ### 🌍 Geo Blocking
@@ -84,12 +86,14 @@ Die Nutzung ist bewusst einfach gehalten:
 | Liste | Einträge |
 |---|---:|
 | [combined_threat_blacklist_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/combined_threat_blacklist_ipv4.txt) | **2.344.956** |
-| [active_blacklist_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/active_blacklist_ipv4.txt) | wird kleiner je mehr Daten akkumuliert |
-| [blacklist_confidence40_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/blacklist_confidence40_ipv4.txt) | wird kleiner je mehr Daten akkumuliert |
+| [active_blacklist_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/active_blacklist_ipv4.txt) | **0** |
+| [blacklist_confidence40_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/blacklist_confidence40_ipv4.txt) | **0** |
+| [watchlist_confidence20to39_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/watchlist_confidence20to39_ipv4.txt) | **0** |
 | [cve_exploit_ips.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/cve_exploit_ips.txt) | **220.881** |
 | [vpn_proxy_ranges.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/vpn_proxy_ranges.txt) | **111.974** |
 | [tor_exit_nodes.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/tor_exit_nodes.txt) | **20.120** |
 | [bot_detector_blacklist_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/bot_detector_blacklist_ipv4.txt) | **17.954** |
+| [abuseipdb_api_blacklist.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/abuseipdb_api_blacklist.txt) | **0** |
 | [all_countries_ipv4.txt](https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/all_countries_ipv4.txt) | **~254.556 CIDR-Ranges** |
 
 ---
