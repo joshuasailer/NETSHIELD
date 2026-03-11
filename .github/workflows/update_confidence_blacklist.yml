@@ -3,6 +3,13 @@ name: Confidence Blacklist
 on:
   schedule:
     - cron: '15 0 * * *'    # täglich 00:15 UTC (15 Min nach Combined)
+    - cron: '15 3 * * *'    # täglich 03:15 UTC (15 Min nach Combined-Lauf um 03:00)
+    - cron: '15 6 * * *'    # täglich 06:15 UTC (15 Min nach Combined-Lauf um 06:00)
+    - cron: '15 9 * * *'    # täglich 09:15 UTC
+    - cron: '15 12 * * *'   # täglich 12:15 UTC
+    - cron: '15 15 * * *'   # täglich 15:15 UTC
+    - cron: '15 18 * * *'   # täglich 18:15 UTC
+    - cron: '15 21 * * *'   # täglich 21:15 UTC
   workflow_dispatch:
 
 env:
@@ -16,10 +23,10 @@ permissions:
   pull-requests: none
   security-events: none
 
-
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
+
 jobs:
   update-confidence:
     runs-on: ubuntu-latest
@@ -35,8 +42,12 @@ jobs:
         uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         with:
           path: seen_db.json
-          key: netshield-seen-db-v1
+          # FIX: restore-keys matcht jetzt alle Varianten die Combined schreibt
+          # Combined speichert: netshield-seen-db-v1-<run_id>
+          # Durch restore-keys holen wir immer den neuesten verfügbaren Cache
+          key: netshield-seen-db-v1-latest
           restore-keys: |
+            netshield-seen-db-v1-
             netshield-seen-db-
 
       - name: Build Confidence Blacklists from seen_db
@@ -61,6 +72,17 @@ jobs:
               db = json.load(f)
           print(f"seen_db geladen: {len(db)} IPs")
 
+          # Alter der seen_db prüfen – warnen wenn zu alt
+          newest_last = max((d.get("last","2000-01-01") for d in db.values()), default="2000-01-01")
+          try:
+              newest_dt = datetime.strptime(newest_last, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+              db_age_hours = (now - newest_dt).total_seconds() / 3600
+              print(f"seen_db aktuellster Eintrag: {newest_last} ({db_age_hours:.1f}h alt)")
+              if db_age_hours > 6:
+                  print(f"WARNUNG: seen_db ist {db_age_hours:.1f}h alt – Cache möglicherweise veraltet!")
+          except:
+              pass
+
           if not os.path.exists(BLACKLIST):
               print(f"FEHLER: {BLACKLIST} nicht gefunden!")
               exit(1)
@@ -69,36 +91,78 @@ jobs:
               combined_ips = {l.strip() for l in f if l.strip() and not l.startswith("#")}
           print(f"Combined Blacklist: {len(combined_ips)} IPs")
 
-          # Konfidenz-Berechnung:
-          # HQ-Feed = Basis 60% | 2+ Feeds = Basis 40%
-          # +20% wenn letzten 7 Tage | +10% wenn letzten 30 Tage
-          # +10% wenn 30+ Tage bekannt | +5% wenn 14+ Tage bekannt
+          # ── Konfidenz-Berechnung ──────────────────────────────────────────
+          #
+          # Basis-Score:
+          #   HQ-Feed (hq=True)          → 60
+          #   Non-HQ mit 3+ Feeds        → 45   ← NEU: Stufen statt pauschal 40
+          #   Non-HQ mit 2 Feeds         → 35
+          #   Non-HQ mit 1 Feed          → 20
+          #
+          # Aktivitäts-Bonus (addiert):
+          #   Letzte Aktivität ≤ 3 Tage  → +25
+          #   Letzte Aktivität ≤ 7 Tage  → +20
+          #   Letzte Aktivität ≤ 14 Tage → +15
+          #   Letzte Aktivität ≤ 30 Tage → +10
+          #   Letzte Aktivität > 30 Tage → +0
+          #
+          # Persistenz-Bonus (addiert):
+          #   Bekannt ≥ 60 Tage          → +15
+          #   Bekannt ≥ 30 Tage          → +10
+          #   Bekannt ≥ 14 Tage          → +5
+          #
+          # Ziel: conf ≥ 40 → blacklist_confidence40
+          #        conf 20–39 → watchlist_confidence20to39
+          #        conf < 20  → ignoriert (noch nicht ausreichend bestätigt)
 
           confidence40 = []
           confidence20 = []
+          skipped      = 0
 
           for ip, data in db.items():
               if ip not in combined_ips:
                   continue
-              is_hq      = data.get("hq", False)
-              last_seen  = data.get("last",  "2000-01-01")
-              first_seen = data.get("first", last_seen)
+
+              is_hq       = data.get("hq", False)
+              feed_count  = len(data.get("feeds", []))
+              last_seen   = data.get("last",  "2000-01-01")
+              first_seen  = data.get("first", last_seen)
+
               try:
                   last_dt  = datetime.strptime(last_seen,  "%Y-%m-%d").replace(tzinfo=timezone.utc)
                   first_dt = datetime.strptime(first_seen, "%Y-%m-%d").replace(tzinfo=timezone.utc)
               except:
+                  skipped += 1
                   continue
 
               days_since_last = (now - last_dt).days
               days_known      = (last_dt - first_dt).days + 1
-              conf = 60 if is_hq else 40
 
-              if days_since_last <= 7:
+              # Basis
+              if is_hq:
+                  conf = 60
+              elif feed_count >= 3:
+                  conf = 45
+              elif feed_count >= 2:
+                  conf = 35
+              else:
+                  conf = 20
+
+              # Aktivitäts-Bonus
+              if days_since_last <= 3:
+                  conf += 25
+              elif days_since_last <= 7:
                   conf += 20
+              elif days_since_last <= 14:
+                  conf += 15
               elif days_since_last <= 30:
                   conf += 10
+              # > 30 Tage: kein Bonus
 
-              if days_known >= 30:
+              # Persistenz-Bonus
+              if days_known >= 60:
+                  conf += 15
+              elif days_known >= 30:
                   conf += 10
               elif days_known >= 14:
                   conf += 5
@@ -113,8 +177,9 @@ jobs:
           confidence40.sort(key=lambda x: (-x[1], x[0]))
           confidence20.sort(key=lambda x: (-x[1], x[0]))
 
-          print(f"Konfidenz ≥40%: {len(confidence40)} IPs")
+          print(f"Konfidenz ≥40%:   {len(confidence40)} IPs")
           print(f"Konfidenz 20-39%: {len(confidence20)} IPs")
+          print(f"Übersprungen:     {skipped} IPs (Datumsfehler)")
 
           with open(OUT_40, "w") as f:
               f.write(f"# NETSHIELD Blacklist – Hohe Konfidenz (≥40%)\n")
