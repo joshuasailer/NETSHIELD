@@ -121,7 +121,7 @@ jobs:
                   stripped = line.strip()
                   if stripped.startswith("python3 -c") and (stripped.endswith('"') is False or stripped.count('"') < 2):
                       if stripped.endswith('"') is False:
-                          errors.append(f"Zeile {i}: `python3 -c \"...` mit mehrzeiligem Code – YAML-Syntaxfehler, bitte `python3 << 'EOF'` verwenden")
+                          errors.append("Zeile " + str(i) + ": `python3 -c \"...` mit mehrzeiligem Code – YAML-Syntaxfehler, bitte python3 Heredoc verwenden")
 
               # ── Heredoc (EOF/PYEOF) ohne korrekte Einrückung ─────────────
               in_heredoc = False
