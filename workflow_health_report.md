@@ -1,7 +1,7 @@
 # Workflow Health Checker – Report
-**Aktualisiert:** 2026-03-12 20:04 UTC
+**Aktualisiert:** 2026-03-12 20:05 UTC
 
-**Workflows:** 17 | ✅ 13 OK | ⚠️ 0 Warnung | ❌ 4 Fehler
+**Workflows:** 17 | ✅ 12 OK | ⚠️ 0 Warnung | ❌ 5 Fehler
 
 ---
 ## Übersicht
@@ -10,7 +10,7 @@
 |---|---|---|---|---|
 | `asn_reputation_scorer.yml` | ❌ FEHLER | 2 | 0 | `0 2 * * *` |
 | `auto_feed_discovery.yml` | ❌ FEHLER | 1 | 0 | `30 4 * * 0` |
-| `community_ip_report.yml` | ✅ OK | 0 | 0 | – |
+| `community_ip_report.yml` | ❌ FEHLER | 1 | 0 | – |
 | `cve_to_ip_mapper.yml` | ✅ OK | 0 | 0 | `0 4 * * *` |
 | `duplicate_cleaner.yml` | ✅ OK | 0 | 0 | `30 4 * * *` |
 | `false_positive_checker.yml` | ✅ OK | 0 | 0 | `30 5 * * *`, `30 13 * * *`, `30 21 * * *` |
@@ -38,6 +38,10 @@
 
 - 🔴 [AUDIT-BUG-2] seen_db.json wird per json.dump() geschrieben, aber fehlt im `git add`-Befehl. Fällt der GitHub-Cache nach 7 Tagen weg, gehen alle Änderungen (z.B. Community-Reports) dauerhaft verloren. Fix: `git add ... seen_db.json` ergänzen.
 
+### `community_ip_report.yml`
+
+- 🔴 [AUDIT-BUG-2] seen_db.json wird per json.dump() geschrieben, aber fehlt im `git add`-Befehl. Fällt der GitHub-Cache nach 7 Tagen weg, gehen alle Änderungen (z.B. Community-Reports) dauerhaft verloren. Fix: `git add ... seen_db.json` ergänzen.
+
 ### `score_decay_monitor.yml`
 
 - 🔴 [AUDIT-BUG-2] seen_db.json wird per json.dump() geschrieben, aber fehlt im `git add`-Befehl. Fällt der GitHub-Cache nach 7 Tagen weg, gehen alle Änderungen (z.B. Community-Reports) dauerhaft verloren. Fix: `git add ... seen_db.json` ergänzen.
@@ -48,4 +52,4 @@
 
 
 ---
-*Generiert: 2026-03-12 20:04 UTC | 17 Workflow-Dateien geprüft*
+*Generiert: 2026-03-12 20:05 UTC | 17 Workflow-Dateien geprüft*
