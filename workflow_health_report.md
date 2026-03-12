@@ -1,5 +1,5 @@
 # Workflow Health Checker – Report
-**Aktualisiert:** 2026-03-12 20:52 UTC
+**Aktualisiert:** 2026-03-12 21:12 UTC
 
 **Workflows:** 17 | ✅ 16 OK | ⚠️ 0 Warnung | ❌ 1 Fehler
 
@@ -17,22 +17,22 @@
 | `feed_health_monitor.yml` | ✅ OK | 0 | 0 | `0 1 * * *` |
 | `geo_tagger.yml` | ✅ OK | 0 | 0 | `30 6 * * 0` |
 | `netshield_report_generator.yml` | ✅ OK | 0 | 0 | `0,30 * * * *` |
-| `score_decay_monitor.yml` | ❌ FEHLER | 1 | 0 | `0 7 * * 0` |
+| `score_decay_monitor.yml` | ✅ OK | 0 | 0 | `0 7 * * 0` |
 | `tor_exit_monitor.yml` | ✅ OK | 0 | 0 | `30 23 * * *` |
 | `update-blocklist.yml` | ✅ OK | 0 | 0 | `30 2 * * 1`, `30 2 * * 3` |
 | `update_bot_detector.yml` | ✅ OK | 0 | 0 | `45 23 * * *` |
 | `update_combined_blacklist.yml` | ✅ OK | 0 | 0 | `0 */3 * * *` |
 | `update_confidence_blacklist.yml` | ✅ OK | 0 | 0 | `15 0 * * *`, `15 3 * * *`, `15 6 * * *`, `15 9 * * *`, `15 12 * * *`, `15 15 * * *`, `15 18 * * *`, `15 21 * * *` |
 | `vpn_proxy_detector.yml` | ✅ OK | 0 | 0 | `30 3 * * 1` |
-| `workflow_health_checker.yml` | ✅ OK | 0 | 0 | `5 1 * * *` |
+| `workflow_health_checker.yml` | ❌ FEHLER | 1 | 1 | `5 1 * * *` |
 
 ---
 ## ❌ Fehler im Detail
 
-### `score_decay_monitor.yml`
+### `workflow_health_checker.yml`
 
-- 🔴 [AUDIT-BUG-3] Score-Decay-Workflow speichert Cache mit Key `netshield-seen-db-v1-latest` – überschreibt damit den aktuellen Combined-Cache mit einer modifizierten (ausgedünnten) seen_db. Der nächste Combined-Lauf startet mit falscher DB. Fix: Save-Key auf `netshield-seen-db-v1-decay-23337981` ändern.
+- 🔴 [AUDIT-BUG-3] Score-Decay-Workflow hat keinen versionierten Cache-Save `netshield-seen-db-v1-decay-23024138995` – Fix: Save-Step mit diesem Key ergänzen.
 
 
 ---
-*Generiert: 2026-03-12 20:52 UTC | 17 Workflow-Dateien geprüft*
+*Generiert: 2026-03-12 21:12 UTC | 17 Workflow-Dateien geprüft*
