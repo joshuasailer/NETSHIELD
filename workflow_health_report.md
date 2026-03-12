@@ -1,5 +1,5 @@
 # Workflow Health Checker – Report
-**Aktualisiert:** 2026-03-12 19:52 UTC
+**Aktualisiert:** 2026-03-12 19:56 UTC
 
 **Workflows:** 17 | ✅ 14 OK | ⚠️ 0 Warnung | ❌ 3 Fehler
 
@@ -16,7 +16,7 @@
 | `false_positive_checker.yml` | ✅ OK | 0 | 0 | `30 5 * * *`, `30 13 * * *`, `30 21 * * *` |
 | `feed_health_monitor.yml` | ✅ OK | 0 | 0 | `0 1 * * *` |
 | `geo_tagger.yml` | ✅ OK | 0 | 0 | `30 6 * * 0` |
-| `netshield_report_generator.yml` | ✅ OK | 0 | 0 | `50 0 * * *` |
+| `netshield_report_generator.yml` | ✅ OK | 0 | 0 | `0,30 * * * *` |
 | `score_decay_monitor.yml` | ✅ OK | 0 | 0 | `0 7 * * 0` |
 | `tor_exit_monitor.yml` | ✅ OK | 0 | 0 | `30 23 * * *` |
 | `update-blocklist.yml` | ✅ OK | 0 | 0 | `30 2 * * 1`, `30 2 * * 3` |
@@ -44,4 +44,4 @@
 
 
 ---
-*Generiert: 2026-03-12 19:52 UTC | 17 Workflow-Dateien geprüft*
+*Generiert: 2026-03-12 19:56 UTC | 17 Workflow-Dateien geprüft*
