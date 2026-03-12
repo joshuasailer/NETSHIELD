@@ -1,7 +1,7 @@
 # Workflow Health Checker – Report
-**Aktualisiert:** 2026-03-12 21:14 UTC
+**Aktualisiert:** 2026-03-12 21:15 UTC
 
-**Workflows:** 17 | ✅ 16 OK | ⚠️ 0 Warnung | ❌ 1 Fehler
+**Workflows:** 17 | ✅ 16 OK | ⚠️ 1 Warnung | ❌ 0 Fehler
 
 ---
 ## Übersicht
@@ -24,15 +24,16 @@
 | `update_combined_blacklist.yml` | ✅ OK | 0 | 0 | `0 */3 * * *` |
 | `update_confidence_blacklist.yml` | ✅ OK | 0 | 0 | `15 0 * * *`, `15 3 * * *`, `15 6 * * *`, `15 9 * * *`, `15 12 * * *`, `15 15 * * *`, `15 18 * * *`, `15 21 * * *` |
 | `vpn_proxy_detector.yml` | ✅ OK | 0 | 0 | `30 3 * * 1` |
-| `workflow_health_checker.yml` | ❌ FEHLER | 1 | 1 | `5 1 * * *` |
+| `workflow_health_checker.yml` | ⚠️ WARNUNG | 0 | 1 | `5 1 * * *` |
 
 ---
-## ❌ Fehler im Detail
+## ⚠️ Warnungen im Detail
 
 ### `workflow_health_checker.yml`
 
-- 🔴 [AUDIT-BUG-3] Score-Decay-Workflow hat keinen versionierten Cache-Save `netshield-seen-db-v1-decay-23024217397` – Fix: Save-Step mit diesem Key ergänzen.
+- 🟡 Cache-Restore ohne `restore-keys` im Restore-Block – bei Cache-Miss (z.B. nach 7 Tagen Inaktivität) wird seen_db nicht gefunden. Fix: `restore-keys: |
+  netshield-seen-db-v1-` ergänzen.
 
 
 ---
-*Generiert: 2026-03-12 21:14 UTC | 17 Workflow-Dateien geprüft*
+*Generiert: 2026-03-12 21:15 UTC | 17 Workflow-Dateien geprüft*
