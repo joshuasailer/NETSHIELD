@@ -16,7 +16,6 @@ permissions:
   pull-requests: none
   security-events: none
 
-
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
@@ -34,28 +33,183 @@ jobs:
       - name: Generate Firewall Export Files
         run: |
           python3 << 'EOF'
-          import os, json
+          import os
+          import re
+          import csv
+          import json
+          import gzip
+          import bz2
+          import lzma
+          import zipfile
+          import ipaddress
           from datetime import datetime, timezone
+          import xml.etree.ElementTree as ET
 
           now     = datetime.now(timezone.utc)
           now_str = now.strftime("%Y-%m-%d %H:%M UTC")
           now_iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-          # active_blacklist verwenden (Stufe 2 – kleiner, schnell, OPNsense-tauglich)
-          BLACKLIST = "active_blacklist_ipv4.txt"
-          if not os.path.exists(BLACKLIST):
-              BLACKLIST = "combined_threat_blacklist_ipv4.txt"
-              print(f"HINWEIS: active_blacklist nicht gefunden – verwende combined")
-          if not os.path.exists(BLACKLIST):
-              print(f"FEHLER: Keine Blacklist gefunden!")
+          IPV4_RE = re.compile(r'\b((?:\d{1,3}\.){3}\d{1,3})\b')
+          SUPPORTED_EXTENSIONS = [
+              ".txt", ".csv", ".json", ".xml", ".ipset", ".conf", ".sh", ".list", ".dat",
+              ".gz", ".zip", ".bz2", ".xz"
+          ]
+
+          def is_valid_public_ipv4(ip):
+              try:
+                  obj = ipaddress.ip_address(ip)
+                  return (
+                      obj.version == 4 and
+                      not obj.is_private and
+                      not obj.is_loopback and
+                      not obj.is_multicast and
+                      not obj.is_reserved and
+                      not obj.is_link_local and
+                      not obj.is_unspecified
+                  )
+              except Exception:
+                  return False
+
+          def extract_ips_from_text(text):
+              ips = []
+              seen = set()
+              for match in IPV4_RE.finditer(text):
+                  ip = match.group(1)
+                  if is_valid_public_ipv4(ip) and ip not in seen:
+                      ips.append(ip)
+                      seen.add(ip)
+              return ips
+
+          def read_text_file(path):
+              with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                  return f.read()
+
+          def read_gzip_file(path):
+              with gzip.open(path, "rt", encoding="utf-8", errors="ignore") as f:
+                  return f.read()
+
+          def read_bz2_file(path):
+              with bz2.open(path, "rt", encoding="utf-8", errors="ignore") as f:
+                  return f.read()
+
+          def read_xz_file(path):
+              with lzma.open(path, "rt", encoding="utf-8", errors="ignore") as f:
+                  return f.read()
+
+          def read_zip_file(path):
+              collected = []
+              with zipfile.ZipFile(path, "r") as zf:
+                  for member in zf.infolist():
+                      if member.is_dir():
+                          continue
+                      try:
+                          with zf.open(member, "r") as fh:
+                              collected.append(fh.read().decode("utf-8", errors="ignore"))
+                      except Exception as ex:
+                          print(f"WARNUNG: ZIP-Eintrag {member.filename} konnte nicht gelesen werden: {ex}")
+              return "\n".join(collected)
+
+          def parse_json_file(path):
+              with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                  data = json.load(f)
+
+              ips = []
+              seen = set()
+
+              def walk(value):
+                  if isinstance(value, dict):
+                      for v in value.values():
+                          walk(v)
+                  elif isinstance(value, list):
+                      for item in value:
+                          walk(item)
+                  elif isinstance(value, str):
+                      for ip in extract_ips_from_text(value):
+                          if ip not in seen:
+                              ips.append(ip)
+                              seen.add(ip)
+
+              walk(data)
+              return ips
+
+          def parse_csv_file(path):
+              ips = []
+              seen = set()
+              with open(path, "r", encoding="utf-8", errors="ignore", newline="") as f:
+                  reader = csv.reader(f)
+                  for row in reader:
+                      for cell in row:
+                          for ip in extract_ips_from_text(cell):
+                              if ip not in seen:
+                                  ips.append(ip)
+                                  seen.add(ip)
+              return ips
+
+          def parse_xml_file(path):
+              ips = []
+              seen = set()
+              try:
+                  tree = ET.parse(path)
+                  root = tree.getroot()
+                  text_content = "\n".join(elem.text or "" for elem in root.iter())
+                  for ip in extract_ips_from_text(text_content):
+                      if ip not in seen:
+                          ips.append(ip)
+                          seen.add(ip)
+                  return ips
+              except Exception:
+                  return extract_ips_from_text(read_text_file(path))
+
+          def load_ips_from_file(path):
+              lower = path.lower()
+              if lower.endswith(".json"):
+                  return parse_json_file(path)
+              if lower.endswith(".csv"):
+                  return parse_csv_file(path)
+              if lower.endswith(".xml"):
+                  return parse_xml_file(path)
+              if lower.endswith(".gz"):
+                  return extract_ips_from_text(read_gzip_file(path))
+              if lower.endswith(".bz2"):
+                  return extract_ips_from_text(read_bz2_file(path))
+              if lower.endswith(".xz"):
+                  return extract_ips_from_text(read_xz_file(path))
+              if lower.endswith(".zip"):
+                  return extract_ips_from_text(read_zip_file(path))
+              return extract_ips_from_text(read_text_file(path))
+
+          def find_blacklist_file():
+              preferred_bases = [
+                  "active_blacklist_ipv4",
+                  "combined_threat_blacklist_ipv4",
+                  "active_blacklist",
+                  "combined_threat_blacklist",
+              ]
+              for base in preferred_bases:
+                  direct_candidates = [base] + [base + ext for ext in SUPPORTED_EXTENSIONS]
+                  for candidate in direct_candidates:
+                      if os.path.exists(candidate):
+                          return candidate
+
+              for entry in sorted(os.listdir(".")):
+                  if not os.path.isfile(entry):
+                      continue
+                  if any(entry.endswith(ext) for ext in SUPPORTED_EXTENSIONS):
+                      lowered = entry.lower()
+                      if any(token in lowered for token in ["blacklist", "blocklist", "threat", "malicious", "active"]):
+                          return entry
+              return None
+
+          BLACKLIST = find_blacklist_file()
+          if not BLACKLIST:
+              print("FEHLER: Keine unterstützte Blacklist-Datei gefunden!")
               exit(1)
 
-          ips = []
-          with open(BLACKLIST) as f:
-              for line in f:
-                  line = line.strip()
-                  if line and not line.startswith("#"):
-                      ips.append(line)
+          try:
+              ips = load_ips_from_file(BLACKLIST)
+          except Exception as ex:
+              print(f"FEHLER: Blacklist-Datei konnte nicht gelesen werden ({BLACKLIST}): {ex}")
+              exit(1)
 
           if not ips:
               print("WARNUNG: Blacklist leer – Export übersprungen.")
@@ -68,6 +222,7 @@ jobs:
           with open("firewall_exports/blacklist.json", "w") as f:
               json.dump({"name": "NETSHIELD Active Blacklist", "updated": now_iso,
                          "source": "https://github.com/juergen2025sys/NETSHIELD",
+                         "input_file": BLACKLIST,
                          "count": len(ips), "ips": ips}, f, indent=2)
           print(f"  OK: blacklist.json ({len(ips)} IPs)")
 
@@ -136,7 +291,9 @@ jobs:
 
           # README
           with open("firewall_exports/README.md", "w", encoding="utf-8") as f:
-              f.write(f"# NETSHIELD Firewall Exports\n\n**Aktualisiert:** {now_str}  \n**IPs:** {len(ips)}\n\n")
+              f.write(f"# NETSHIELD Firewall Exports\n\n**Aktualisiert:** {now_str}  \n**IPs:** {len(ips)}\n**Quelle:** `{BLACKLIST}`\n\n")
+              f.write("## Unterstützte Eingabeformate\n\n")
+              f.write("`.txt`, `.csv`, `.json`, `.xml`, `.ipset`, `.conf`, `.sh`, `.list`, `.dat`, `.gz`, `.zip`, `.bz2`, `.xz`\n\n")
               f.write("| Datei | Format | Verwendung |\n|---|---|---|\n")
               f.write("| `blacklist.json` | JSON | APIs, SIEM |\n")
               f.write("| `blacklist.csv` | CSV | Excel, Datenbanken |\n")
