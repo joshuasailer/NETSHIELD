@@ -8,6 +8,10 @@ on:
       - '.github/workflows/*.yml'
   workflow_dispatch:
 
+concurrency:
+  group: workflow-health-checker
+  cancel-in-progress: false
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -421,6 +425,6 @@ jobs:
             echo "Keine Änderungen"
           else
             git commit -m "Workflow Health Checker: $(date -u '+%Y-%m-%d %H:%M') UTC"
-            git pull --rebase origin ${GITHUB_REF_NAME}
+            git pull --rebase -X theirs origin ${GITHUB_REF_NAME}
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
