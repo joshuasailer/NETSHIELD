@@ -2,7 +2,7 @@ name: Geo-Tagger
 
 on:
   schedule:
-    - cron: '30 6 * * 0'  # Sonntag 06:30 UTC (nach false_positive_checker 05:30 + combined 06:00)
+    - cron: '30 6 * * 0'  # Sonntag 06:30 UTC
   workflow_dispatch:
 
 env:
@@ -16,20 +16,20 @@ permissions:
   pull-requests: none
   security-events: none
 
-
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
+
 jobs:
   geo-tagger:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: true
 
-      - name: Enrich Blacklist with Geo & ASN Data
+      - name: Enrich Blacklist with Geo Data via ScaniteX
         run: |
           python3 << 'EOF'
           import urllib.request
@@ -37,20 +37,59 @@ jobs:
           import os
           import json
           import time
+          import ipaddress
           from datetime import datetime, timezone
           from collections import defaultdict
 
           now = datetime.now(timezone.utc)
           now_str = now.strftime("%Y-%m-%d %H:%M UTC")
-          IP_RE = re.compile(r'\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b')
+          CIDR_RE = re.compile(r'\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/\d{1,2})\b')
 
-          def fetch_json(url, timeout=15):
+          def fetch_raw(url, timeout=30):
               try:
-                  req = urllib.request.Request(url, headers={"User-Agent": "NETSHIELD-GeoTagger/1.0"})
+                  req = urllib.request.Request(url, headers={"User-Agent": "NETSHIELD-GeoTagger/2.0"})
                   with urllib.request.urlopen(req, timeout=timeout) as r:
-                      return json.loads(r.read().decode("utf-8", errors="ignore"))
+                      return r.read().decode("utf-8", errors="ignore")
               except Exception as e:
+                  print(f"  FEHLER {url}: {e}")
                   return None
+
+          # ── Länder-Definitionen ───────────────────────────────────────────
+          # Alle Länder die getrackt werden sollen.
+          # ScaniteX URL: https://scanitex.com/en/resources/ip-ranges/{cc_lower}
+          COUNTRIES = [
+              # High-Risk (geopolitisch + bekannte Abuse-Quellen)
+              {"cc": "RU", "name": "Russland",          "flag": "🇷🇺", "risk": "high"},
+              {"cc": "CN", "name": "China",             "flag": "🇨🇳", "risk": "high"},
+              {"cc": "KP", "name": "Nordkorea",         "flag": "🇰🇵", "risk": "high"},
+              {"cc": "IR", "name": "Iran",              "flag": "🇮🇷", "risk": "high"},
+              {"cc": "SY", "name": "Syrien",            "flag": "🇸🇾", "risk": "high"},
+              {"cc": "BY", "name": "Belarus",           "flag": "🇧🇾", "risk": "high"},
+              # Medium-Risk
+              {"cc": "UA", "name": "Ukraine",           "flag": "🇺🇦", "risk": "medium"},
+              {"cc": "NG", "name": "Nigeria",           "flag": "🇳🇬", "risk": "medium"},
+              {"cc": "BR", "name": "Brasilien",         "flag": "🇧🇷", "risk": "medium"},
+              {"cc": "IN", "name": "Indien",            "flag": "🇮🇳", "risk": "medium"},
+              {"cc": "VN", "name": "Vietnam",           "flag": "🇻🇳", "risk": "medium"},
+              {"cc": "RO", "name": "Rumänien",          "flag": "🇷🇴", "risk": "medium"},
+              {"cc": "TR", "name": "Türkei",            "flag": "🇹🇷", "risk": "medium"},
+              {"cc": "ID", "name": "Indonesien",        "flag": "🇮🇩", "risk": "medium"},
+              {"cc": "PK", "name": "Pakistan",          "flag": "🇵🇰", "risk": "medium"},
+              {"cc": "BD", "name": "Bangladesch",       "flag": "🇧🇩", "risk": "medium"},
+              {"cc": "HK", "name": "Hongkong",          "flag": "🇭🇰", "risk": "medium"},
+              {"cc": "KZ", "name": "Kasachstan",        "flag": "🇰🇿", "risk": "medium"},
+              # Low-Risk / Tracking (grosse Netzwerke / bekannte Hoster-Länder)
+              {"cc": "US", "name": "USA",               "flag": "🇺🇸", "risk": "low"},
+              {"cc": "DE", "name": "Deutschland",       "flag": "🇩🇪", "risk": "low"},
+              {"cc": "NL", "name": "Niederlande",       "flag": "🇳🇱", "risk": "low"},
+              {"cc": "FR", "name": "Frankreich",        "flag": "🇫🇷", "risk": "low"},
+              {"cc": "GB", "name": "Grossbritannien",   "flag": "🇬🇧", "risk": "low"},
+              {"cc": "SG", "name": "Singapur",          "flag": "🇸🇬", "risk": "low"},
+              {"cc": "JP", "name": "Japan",             "flag": "🇯🇵", "risk": "low"},
+              {"cc": "KR", "name": "Südkorea",          "flag": "🇰🇷", "risk": "low"},
+          ]
+
+          SCANITEX_BASE = "https://scanitex.com/en/resources/ip-ranges"
 
           # ── Blacklist laden ───────────────────────────────────────────────
           BLACKLIST = "combined_threat_blacklist_ipv4.txt"
@@ -61,135 +100,149 @@ jobs:
           with open(BLACKLIST) as f:
               blacklist_ips = [l.strip() for l in f if l.strip() and not l.startswith("#")]
 
-          print(f"Blacklist: {len(blacklist_ips)} IPs geladen")
-          print("Starte Geo/ASN-Lookup via ip-api.com (Batch, kostenlos)...")
+          print(f"Blacklist: {len(blacklist_ips):,} IPs geladen")
 
-          # ip-api.com Batch: bis zu 100 IPs pro Request, kostenlos
-          geo_data = {}
-          country_count  = defaultdict(int)
-          asn_count      = defaultdict(lambda: {"count": 0, "org": ""})
-          city_count     = defaultdict(int)
-
-          BATCH_SIZE = 100
-          sample = blacklist_ips[:1000]  # Top 1000 enrichen
-
-          for batch_start in range(0, len(sample), BATCH_SIZE):
-              batch = sample[batch_start:batch_start + BATCH_SIZE]
-              batch_num = batch_start // BATCH_SIZE + 1
-              total_batches = (len(sample) + BATCH_SIZE - 1) // BATCH_SIZE
-              print(f"  Batch {batch_num}/{total_batches} ({len(batch)} IPs)...")
-
-              # ip-api.com Batch-Endpunkt
-              payload = json.dumps([
-                  {"query": ip, "fields": "status,country,countryCode,city,org,as,isp,proxy,hosting"}
-                  for ip in batch
-              ]).encode("utf-8")
-
+          # IPs als ipaddress-Objekte für CIDR-Check
+          bl_addrs = []
+          for ip in blacklist_ips:
               try:
-                  req = urllib.request.Request(
-                      "https://ip-api.com/batch?fields=status,country,countryCode,city,org,as,isp,proxy,hosting",
-                      data=payload,
-                      headers={
-                          "Content-Type": "application/json",
-                          "User-Agent": "NETSHIELD-GeoTagger/1.0"
-                      }
-                  )
-                  with urllib.request.urlopen(req, timeout=20) as r:
-                      results = json.loads(r.read().decode("utf-8"))
+                  bl_addrs.append((ip, ipaddress.ip_address(ip)))
+              except:
+                  pass
+          print(f"Gültige IPs für CIDR-Check: {len(bl_addrs):,}")
 
-                  for ip, result in zip(batch, results):
-                      if result.get("status") == "success":
-                          geo_data[ip] = {
-                              "country":     result.get("country", "Unknown"),
-                              "countryCode": result.get("countryCode", "??"),
-                              "city":        result.get("city", ""),
-                              "org":         result.get("org", ""),
-                              "asn":         result.get("as", ""),
-                              "isp":         result.get("isp", ""),
-                              "proxy":       result.get("proxy", False),
-                              "hosting":     result.get("hosting", False),
-                          }
-                          cc = result.get("countryCode", "??")
-                          country_count[cc] += 1
-                          asn = result.get("as", "")
-                          if asn:
-                              asn_count[asn]["count"] += 1
-                              asn_count[asn]["org"] = result.get("org", "")
-              except Exception as e:
-                  print(f"    Batch-Fehler: {e}")
+          # ── Pro Land: Prefixliste laden + Blacklist-IPs matchen ───────────
+          print(f"\nLade Länderprefixe von ScaniteX und matche gegen Blacklist...")
+          print(f"({len(COUNTRIES)} Länder)\n")
 
-              time.sleep(1.2)  # ip-api Rate-Limit: max 45 Batch-Requests/Minute
+          results       = []
+          ip_to_country = {}   # ip → cc (für blacklist_geo_enriched.json)
 
-          print(f"\nGeo-Daten für {len(geo_data)} IPs ermittelt")
+          for entry in COUNTRIES:
+              cc   = entry["cc"]
+              url  = f"{SCANITEX_BASE}/{cc.lower()}"
+              print(f"  {entry['flag']} {entry['name']} ({cc})...", end=" ", flush=True)
 
-          # ── Geo-enriched Report schreiben ─────────────────────────────────
-          GEO_FILE = "blacklist_geo_enriched.json"
-          with open(GEO_FILE, "w") as f:
+              raw = fetch_raw(url)
+              if not raw:
+                  print("SKIP")
+                  continue
+
+              # CIDRs aus HTML/TXT parsen
+              networks = []
+              for cidr in CIDR_RE.findall(raw):
+                  try:
+                      networks.append(ipaddress.ip_network(cidr, strict=False))
+                  except:
+                      pass
+
+              if not networks:
+                  print("SKIP (keine CIDRs)")
+                  continue
+
+              # Blacklist-IPs matchen
+              matched = []
+              for ip_str, addr in bl_addrs:
+                  if ip_str in ip_to_country:
+                      continue  # bereits einem Land zugeordnet
+                  for net in networks:
+                      if addr in net:
+                          matched.append(ip_str)
+                          ip_to_country[ip_str] = cc
+                          break
+
+              total_ips = sum(n.num_addresses for n in networks)
+              results.append({
+                  "cc":       cc,
+                  "name":     entry["name"],
+                  "flag":     entry["flag"],
+                  "risk":     entry["risk"],
+                  "matches":  len(matched),
+                  "prefixes": len(networks),
+                  "total_ips": total_ips,
+              })
+
+              print(f"{len(matched):,} BL-Hits / {len(networks)} Prefixes")
+              time.sleep(0.3)
+
+          # Nicht-gematchte IPs als "Unknown"
+          unmatched = [ip for ip, _ in bl_addrs if ip not in ip_to_country]
+          print(f"\nNicht zugeordnet: {len(unmatched):,} IPs")
+
+          # Sortieren nach Matches
+          results.sort(key=lambda x: x["matches"], reverse=True)
+          total_matched = sum(r["matches"] for r in results)
+
+          # ── blacklist_geo_enriched.json ───────────────────────────────────
+          with open("blacklist_geo_enriched.json", "w") as f:
               json.dump({
-                  "updated": now_str,
-                  "total_enriched": len(geo_data),
-                  "data": geo_data
+                  "updated":       now_str,
+                  "method":        "scanitex-cidr-match",
+                  "bl_total":      len(bl_addrs),
+                  "matched":       total_matched,
+                  "unmatched":     len(unmatched),
+                  "ip_to_country": ip_to_country,
               }, f, separators=(",", ":"))
-          print(f"{GEO_FILE} geschrieben")
+          print("blacklist_geo_enriched.json geschrieben")
 
-          # ── Statistik-Dateien ─────────────────────────────────────────────
-          # Top-Länder
-          sorted_countries = sorted(country_count.items(), key=lambda x: x[1], reverse=True)
-          # Top-ASNs
-          sorted_asns = sorted(asn_count.items(), key=lambda x: x[1]["count"], reverse=True)
+          # ── geo_tagger_report.md ──────────────────────────────────────────
+          pct_covered = total_matched / max(len(bl_addrs), 1) * 100
 
-          # Proxy/Hosting-IPs gesondert auflisten
-          proxy_ips   = [ip for ip, d in geo_data.items() if d.get("proxy")]
-          hosting_ips = [ip for ip, d in geo_data.items() if d.get("hosting")]
+          lines = [
+              "# Geo-Tagger – Blacklist Enrichment Report",
+              f"**Aktualisiert:** {now_str}  ",
+              f"**Methode:** ScaniteX Länderprefixe (kein API-Key, kein Rate-Limit)  ",
+              f"**Blacklist-IPs gesamt:** {len(bl_addrs):,}  ",
+              f"**Davon zugeordnet:** {total_matched:,} ({pct_covered:.1f}%)  ",
+              f"**Nicht zugeordnet:** {len(unmatched):,}",
+              "",
+              "---",
+              "",
+              "## Länder-Übersicht (nach Blacklist-Treffern)",
+              "",
+              "| Rang | Land | Code | Risiko | BL-Hits | Anteil | Prefixes |",
+              "|---|---|---|---|---|---|---|",
+          ]
 
-          # ── Report ────────────────────────────────────────────────────────
-          lines = []
-          lines.append("# Geo-Tagger – Blacklist Enrichment Report")
-          lines.append(f"**Aktualisiert:** {now_str}\n")
-          lines.append("---")
-          lines.append(f"## Top 20 Länder (nach Blacklist-IPs)\n")
-          lines.append("| Rang | Land | Code | IPs | Anteil |")
-          lines.append("|---|---|---|---|---|")
-          total = len(geo_data) or 1
-          flags = {"CN":"🇨🇳","RU":"🇷🇺","US":"🇺🇸","DE":"🇩🇪","NL":"🇳🇱","FR":"🇫🇷",
-                   "GB":"🇬🇧","BR":"🇧🇷","IN":"🇮🇳","KR":"🇰🇷","VN":"🇻🇳","UA":"🇺🇦",
-                   "TR":"🇹🇷","ID":"🇮🇩","HK":"🇭🇰","SG":"🇸🇬","JP":"🇯🇵","IR":"🇮🇷",
-                   "PL":"🇵🇱","TH":"🇹🇭"}
-          # Ländernamen-Mapping aus geo_data aufbauen
-          cc_to_name = {}
-          for ip, d in geo_data.items():
-              cc = d.get("countryCode", "??")
-              if cc not in cc_to_name and d.get("country"):
-                  cc_to_name[cc] = d["country"]
+          risk_label = {"high": "🔴 Hoch", "medium": "🟡 Mittel", "low": "⚪ Niedrig"}
+          for rank, r in enumerate(results, 1):
+              if r["matches"] == 0:
+                  continue
+              pct = r["matches"] / max(len(bl_addrs), 1) * 100
+              lines.append(
+                  f"| {rank} | {r['flag']} {r['name']} | `{r['cc']}` "
+                  f"| {risk_label[r['risk']]} "
+                  f"| {r['matches']:,} | {pct:.1f}% | {r['prefixes']} |"
+              )
 
-          for rank, (cc, count) in enumerate(sorted_countries[:20], 1):
-              flag = flags.get(cc, "🏳️")
-              country_name = cc_to_name.get(cc, cc)
-              pct = f"{count/total*100:.1f}%"
-              lines.append(f"| {rank} | {flag} {country_name} | {cc} | {count} | {pct} |")
+          # Zusammenfassung nach Risikoklasse
+          high_hits   = sum(r["matches"] for r in results if r["risk"] == "high")
+          medium_hits = sum(r["matches"] for r in results if r["risk"] == "medium")
+          low_hits    = sum(r["matches"] for r in results if r["risk"] == "low")
 
-          lines.append("")
-          lines.append("---")
-          lines.append(f"## Top 20 ASNs (nach Blacklist-IPs)\n")
-          lines.append("| Rang | ASN | Organisation | IPs |")
-          lines.append("|---|---|---|---|")
-          for rank, (asn, d) in enumerate(sorted_asns[:20], 1):
-              lines.append(f"| {rank} | `{asn}` | {d['org'][:40]} | {d['count']} |")
-
-          lines.append("")
-          lines.append("---")
-          lines.append(f"## Proxy & Hosting IPs\n")
-          lines.append(f"| Kategorie | Anzahl |")
-          lines.append(f"|---|---|")
-          lines.append(f"| Als Proxy erkannt | **{len(proxy_ips)}** |")
-          lines.append(f"| Als Hosting erkannt | **{len(hosting_ips)}** |")
-          lines.append(f"| Gesamt enriched | **{len(geo_data)}** |")
-
-          lines.append(f"\n---\n*Generiert: {now_str}*")
+          lines += [
+              "",
+              "---",
+              "",
+              "## Zusammenfassung nach Risikoklasse",
+              "",
+              "| Risikoklasse | BL-Hits | Anteil |",
+              "|---|---|---|",
+              f"| 🔴 Hoch (RU/CN/KP/IR/SY/BY) | {high_hits:,} | {high_hits/max(len(bl_addrs),1)*100:.1f}% |",
+              f"| 🟡 Mittel | {medium_hits:,} | {medium_hits/max(len(bl_addrs),1)*100:.1f}% |",
+              f"| ⚪ Niedrig / Tracking | {low_hits:,} | {low_hits/max(len(bl_addrs),1)*100:.1f}% |",
+              f"| ❓ Nicht zugeordnet | {len(unmatched):,} | {len(unmatched)/max(len(bl_addrs),1)*100:.1f}% |",
+              "",
+              "---",
+              f"*Datenquelle: [ScaniteX IP Ranges](https://scanitex.com/en/resources/ip-ranges) (täglich aktualisiert)*  ",
+              f"*Generiert: {now_str}*",
+          ]
 
           with open("geo_tagger_report.md", "w", encoding="utf-8") as f:
               f.write("\n".join(lines))
           print("geo_tagger_report.md geschrieben")
+
+          print(f"\nFERTIG: {total_matched:,} von {len(bl_addrs):,} IPs ({pct_covered:.1f}%) zugeordnet")
           EOF
 
       - name: Commit
@@ -197,6 +250,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add blacklist_geo_enriched.json geo_tagger_report.md
-          git diff --staged --quiet || git commit -m "Geo-Tagger: Blacklist enriched [$(date -u '+%Y-%m-%d %H:%M') UTC]"
+          git diff --staged --quiet || git commit -m "Geo-Tagger: Blacklist geo-enriched [$(date -u '+%Y-%m-%d %H:%M') UTC]"
           git pull --rebase origin ${GITHUB_REF_NAME}
           git push origin HEAD:${GITHUB_REF_NAME}
