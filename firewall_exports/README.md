@@ -1,7 +1,12 @@
 # NETSHIELD Firewall Exports
 
-**Aktualisiert:** 2026-03-12 03:17 UTC  
-**IPs:** 2869985
+**Aktualisiert:** 2026-03-12 17:34 UTC  
+**IPs:** 2967563
+**Quelle:** `active_blacklist_ipv4.txt`
+
+## Unterstützte Eingabeformate
+
+`.txt`, `.csv`, `.json`, `.xml`, `.ipset`, `.conf`, `.sh`, `.list`, `.dat`, `.gz`, `.zip`, `.bz2`, `.xz`
 
 | Datei | Format | Verwendung |
 |---|---|---|
@@ -14,4 +19,4 @@
 | `blacklist_mikrotik.rsc` | RouterOS | Mikrotik |
 | `blacklist_windows_firewall.ps1` | PowerShell | Windows |
 
-*Generiert von NETSHIELD Firewall Format Exporter · 2026-03-12 03:17 UTC*
+*Generiert von NETSHIELD Firewall Format Exporter · 2026-03-12 17:34 UTC*
