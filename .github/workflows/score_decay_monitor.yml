@@ -65,7 +65,7 @@ jobs:
 
           WARN_DAYS     = 30
           CRITICAL_DAYS = 45
-          DECAY_DAYS    = 60    # nach 60 Tagen aus Blacklist entfernen
+          DECAY_DAYS    = 30    # nach 30 Tagen aus Blacklist entfernen
 
           stale_warn     = []
           stale_critical = []
@@ -110,7 +110,7 @@ jobs:
           print(f"Veraltend – Warnung (30-44 Tage): {len(stale_warn)}")
           print(f"Veraltend – Kritisch (45+ Tage):  {len(stale_critical)}")
           print(f"Zombie (Score≥20, 30+ Tage):      {len(zombie_high)}")
-          print(f"Entfernung empfohlen (60+ Tage):  {len(decay_suggest)}")
+          print(f"Entfernung empfohlen (30+ Tage):  {len(decay_suggest)}")
 
           # Decay-Log
           with open("score_decay_log.txt", "w", encoding="utf-8") as f:
@@ -121,11 +121,11 @@ jobs:
               f.write("\n# KRITISCH veraltend (45+ Tage, Score≥10)\n")
               for ip, score, days, last in stale_critical[:200]:
                   f.write(f"{ip}  score={score}  last={last}  ({days}d ago)\n")
-              f.write("\n# Entfernung empfohlen (60+ Tage)\n")
+              f.write("\n# Entfernung empfohlen (30+ Tage)\n")
               for ip, score, days, last in decay_suggest[:500]:
                   f.write(f"{ip}  score={score}  last={last}  ({days}d ago)\n")
 
-          # IPs aus Blacklist löschen (60+ Tage inaktiv)
+          # IPs aus Blacklist löschen (30+ Tage inaktiv)
           removed_from_bl = 0
           if os.path.exists(BLACKLIST) and decay_suggest:
               remove_set = {ip for ip, *_ in decay_suggest}
@@ -154,9 +154,9 @@ jobs:
                    f"| 🟡 Veraltend – Warnung | **{len(stale_warn)}** | 30-44 Tage ohne Aktivität |",
                    f"| 🔴 Veraltend – Kritisch | **{len(stale_critical)}** | 45+ Tage ohne Aktivität |",
                    f"| 💀 Zombie | **{len(zombie_high)}** | Score≥20, 30+ Tage inaktiv |",
-                   f"| 🗑️ Entfernung empfohlen | **{len(decay_suggest)}** | 60+ Tage inaktiv |",
+                   f"| 🗑️ Entfernung empfohlen | **{len(decay_suggest)}** | 30+ Tage inaktiv |",
                    "", "---",
-                   f"## 🗑️ Automatisch gelöscht\n**{removed_from_bl} IPs** aus Blacklist entfernt (60+ Tage inaktiv)\n",
+                   f"## 🗑️ Automatisch gelöscht\n**{removed_from_bl} IPs** aus Blacklist entfernt (30+ Tage inaktiv)\n",
                    f"---\n*Generiert: {now_str} | DB: {len(db)} IPs*"]
 
           with open("score_decay_report.md", "w", encoding="utf-8") as f:
