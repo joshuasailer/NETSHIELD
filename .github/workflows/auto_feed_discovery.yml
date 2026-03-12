@@ -659,7 +659,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add auto_discovered_feeds.json auto_feed_discovery_report.md \
-                  combined_threat_blacklist_ipv4.txt seen_db.json
+                  combined_threat_blacklist_ipv4.txt
+          # seen_db.json bleibt AUSSCHLIESSLICH im GitHub Actions Cache (345 MB, > 100 MB Limit)
           if git diff --staged --quiet; then
             echo "Keine Änderungen"
           else
