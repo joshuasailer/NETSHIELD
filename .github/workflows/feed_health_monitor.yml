@@ -51,7 +51,7 @@ jobs:
               "threatfox_ioc":              "https://raw.githubusercontent.com/elliotwutingfeng/ThreatFox-IOC-IPs/refs/heads/main/ips.txt",
               "l7_ddos":                    "https://raw.githubusercontent.com/Tizian-Maxime-Weigt/L7-HTTP-DDoS-Flood-IP-Signature-IP-List/refs/heads/main/ddos-signatures.txt",
               "binary_defense":             "https://binarydefense.com/banlist.txt",
-              "data_shield":                "https://raw.githubusercontent.com/duggytuxy/Data-Shield_IPv4_Blocklist/refs/heads/main/prod_data-shield_ipv4_blocklist.txt",
+              "data_shield":                "https://raw.githubusercontent.com/duggytuxy/Data-Shield_IPv4_Blocklist/refs/heads/main/prod_critical_data-shield_ipv4_blocklist.txt",
               "interserver":                "https://sigs.interserver.net/ip.txt",
               "crowdsec_ssh":               "https://raw.githubusercontent.com/Y3ll0w/CrowdSec-CAPI-Decisions/refs/heads/main/ssh-bf.json.txt",
               "trcert_malware":             "https://raw.githubusercontent.com/cenk/trcert-malware/refs/heads/main/trcert-ips.txt",

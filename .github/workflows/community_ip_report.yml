@@ -233,7 +233,7 @@ jobs:
             if (status === 'NEW') {
               comment = `## ✅ Report Received\n\nThank you for your report!\n\n| Field | Value |\n|---|---|\n| **IP** | \`${ip}\` |\n| **Attack Type** | ${attackType} |\n| **Status** | Added to Watchlist |\n| **Next Step** | IP will be promoted to Blacklist when confirmed by other feeds |\n\n> 🔄 The next automated run will include this IP in the analysis.`;
             } else if (status === 'UPDATED') {
-              comment = `## ✅ Report Confirmed\n\nThis IP was already in our database. Your report strengthens the confidence score.\n\n| Field | Value |\n|---|---|\n| **IP** | \`${ip}\` |\n| **Attack Type** | ${attackType} |\n| **Status** | Promoted to High-Quality (HQ) → Active Blacklist |\n\n> ⚡ This IP is now in the **Active Blacklist (Stufe 2)** and will be included in the next update.`;
+              comment = `## ✅ Report Confirmed\n\nThis IP was already in our database. Your report strengthens the confidence score.\n\n| Field | Value |\n|---|---|\n| **IP** | \`${ip}\` |\n| **Attack Type** | ${attackType} |\n| **Status** | Confirmation recorded – confidence score increased |\n\n> ⚡ Once this IP has been reported by **3 independent users**, it will be promoted to the **Active Blacklist (Stufe 2)** automatically.`;
             } else if (status === 'INVALID_IP') {
               comment = `## ❌ Invalid IP Address\n\nThe IP address \`${ip}\` could not be processed:\n- It may be a private, reserved, or protected IP\n- Please check the format and try again\n\nIf you believe this is an error, please open a new issue with a valid public IPv4 address.`;
               shouldClose = false;

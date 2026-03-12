@@ -191,12 +191,14 @@ jobs:
               sample = list(ips)[:sample_size]
               if not sample:
                   return 1.0
-              hits = sum(
-                  1 for ip_str in sample
-                  if any(ipaddress.ip_address(ip_str) in net
-                         for net in fp_nets
-                         if not ValueError)
-              )
+              hits = 0
+              for ip_str in sample:
+                  try:
+                      addr = ipaddress.ip_address(ip_str)
+                      if any(addr in net for net in fp_nets):
+                          hits += 1
+                  except ValueError:
+                      pass
               return hits / len(sample)
 
           def add_repo_candidate(candidate_repos, repo, source_label):
