@@ -1,14 +1,14 @@
 # Workflow Health Checker – Report
-**Aktualisiert:** 2026-03-12 20:17 UTC
+**Aktualisiert:** 2026-03-12 20:19 UTC
 
-**Workflows:** 17 | ✅ 16 OK | ⚠️ 0 Warnung | ❌ 1 Fehler
+**Workflows:** 17 | ✅ 17 OK | ⚠️ 0 Warnung | ❌ 0 Fehler
 
 ---
 ## Übersicht
 
 | Workflow | Status | Fehler | Warnungen | Cron |
 |---|---|---|---|---|
-| `asn_reputation_scorer.yml` | ❌ FEHLER | 1 | 0 | `0 2 * * *` |
+| `asn_reputation_scorer.yml` | ✅ OK | 0 | 0 | `0 2 * * *` |
 | `auto_feed_discovery.yml` | ✅ OK | 0 | 0 | `30 4 * * 0` |
 | `community_ip_report.yml` | ✅ OK | 0 | 0 | – |
 | `cve_to_ip_mapper.yml` | ✅ OK | 0 | 0 | `0 4 * * *` |
@@ -27,12 +27,4 @@
 | `workflow_health_checker.yml` | ✅ OK | 0 | 0 | `5 1 * * *` |
 
 ---
-## ❌ Fehler im Detail
-
-### `asn_reputation_scorer.yml`
-
-- 🔴 seen_db.json wird modifiziert, aber kein `Save seen_db Cache`-Step mit `github.run_id` gefunden – Änderungen gehen beim nächsten Run verloren
-
-
----
-*Generiert: 2026-03-12 20:17 UTC | 17 Workflow-Dateien geprüft*
+*Generiert: 2026-03-12 20:19 UTC | 17 Workflow-Dateien geprüft*
