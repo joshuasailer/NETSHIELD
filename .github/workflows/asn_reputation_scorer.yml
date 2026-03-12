@@ -195,19 +195,30 @@ jobs:
                       if ip_str in et_ips:
                           et_bonus += 1
 
-              # Score berechnen
-              # base_score:  Basis-Reputation laut Konfiguration oben
-              # +2 pro Blacklist-IP im ASN-Bereich (deckt schon 100% der IPs ab)
-              # +5 pro IP die auch in Spamhaus DROP ist
-              # +3 pro IP die auch in Emerging Threats ist
-              score = entry["base_score"]
-              score += len(matched_ips) * 2
-              score += drop_bonus * 5
-              score += et_bonus * 3
-              score = min(score, 9999)
-
               total_prefixes = len(networks)
               total_ips_covered = sum(net.num_addresses for net in networks)
+
+              # Score = A (Abuse-Dichte) + B (Absolute Präsenz) + C (Feed-Bonus) + D (Basis)
+              bl_count = len(matched_ips)
+              density = (bl_count / max(total_ips_covered, 1)) * 1_000_000
+
+              if density >= 10_000:    score_a = 60
+              elif density >= 1_000:   score_a = 45
+              elif density >= 100:     score_a = 30
+              elif density >= 10:      score_a = 15
+              elif density > 0:        score_a = 5
+              else:                    score_a = 0
+
+              if bl_count >= 100_000:  score_b = 20
+              elif bl_count >= 10_000: score_b = 15
+              elif bl_count >= 1_000:  score_b = 10
+              elif bl_count >= 100:    score_b = 5
+              elif bl_count > 0:       score_b = 2
+              else:                    score_b = 0
+
+              score_c = min(drop_bonus * 5 + et_bonus * 3, 10)
+              score_d = entry["base_score"]
+              score = score_a + score_b + score_c + score_d
 
               results.append({
                   "asn":            entry["asn"],
@@ -215,7 +226,12 @@ jobs:
                   "country":        entry["country"],
                   "base_score":     entry["base_score"],
                   "score":          score,
+                  "score_a":        score_a,
+                  "score_b":        score_b,
+                  "score_c":        score_c,
+                  "score_d":        score_d,
                   "bl_matches":     len(matched_ips),
+                  "density":        round(density, 2),
                   "drop_bonus":     drop_bonus,
                   "et_bonus":       et_bonus,
                   "prefixes":       total_prefixes,
@@ -261,7 +277,12 @@ jobs:
                   "holder":     r["holder"],
                   "country":    r["country"],
                   "score":      r["score"],
+                  "score_a":    r["score_a"],
+                  "score_b":    r["score_b"],
+                  "score_c":    r["score_c"],
+                  "score_d":    r["score_d"],
                   "bl_matches": r["bl_matches"],
+                  "density":    r["density"],
                   "drop_bonus": r["drop_bonus"],
                   "et_bonus":   r["et_bonus"],
                   "prefixes":   r["prefixes"],
@@ -284,28 +305,32 @@ jobs:
               "",
               "## ASN-Übersicht (nach Score sortiert)",
               "",
-              "| Rang | ASN | Organisation | Land | Score | BL-Hits | DROP | ET | Prefixes |",
-              "|---|---|---|---|---|---|---|---|---|",
+              "| Rang | ASN | Organisation | Land | Score | BL-Hits | Dichte/1M | DROP | ET | Prefixes |",
+              "|---|---|---|---|---|---|---|---|---|---|",
           ]
           for rank, r in enumerate(results, 1):
-              flag = "🔴" if r["score"] >= 200 else "🟠" if r["score"] >= 100 else "🟡" if r["score"] >= 50 else "⚪"
+              flag = "🔴" if r["score"] >= 100 else "🟠" if r["score"] >= 70 else "🟡" if r["score"] >= 50 else "⚪"
+              density_str = f"{r['density']:.1f}"
               lines.append(
                   f"| {rank} | {r['asn']} | {r['holder'][:35]} | {r['country']} "
-                  f"| {flag} {r['score']} | {r['bl_matches']:,} | +{r['drop_bonus']} | +{r['et_bonus']} | {r['prefixes']} |"
+                  f"| {flag} {r['score']} | {r['bl_matches']:,} | {density_str} | +{r['drop_bonus']} | +{r['et_bonus']} | {r['prefixes']} |"
               )
 
           lines += [
               "",
               "---",
               "",
-              "### Score-Formel",
+              "### Score-Formel (normalisiert auf ASN-Größe)",
               "```",
-              "score = base_score + (BL-Treffer × 2) + (DROP-Bonus × 5) + (ET-Bonus × 3)",
+              "score = A (Abuse-Dichte) + B (Absolute Präsenz) + C (Feed-Bonus) + D (Basis-Reputation)",
+              "A: BL-Hits pro 1M IPs im ASN  → max 60",
+              "B: Absolute BL-Treffer-Stufe   → max 20",
+              "C: Spamhaus DROP + ET-Bonus    → max 10",
+              "D: Basis-Reputation (RU/CN++)  → max 40",
               "```",
-              "- **base_score**: Basis-Reputation (RU/CN-Provider höher bewertet)",
-              "- **BL-Treffer**: Blacklist-IPs die in ASN-Prefixes liegen (100% Coverage)",
-              "- **DROP-Bonus**: IPs auch in Spamhaus DROP",
-              "- **ET-Bonus**: IPs auch in Emerging Threats",
+              "- **Abuse-Dichte**: verhindert dass große Netze (AWS) kleine (Contabo) verdrängen",
+              "- **Absolute Präsenz**: große Netze mit viel Abuse bleiben trotzdem trackbar",
+              "- **Feed-Bonus**: IPs auch in Spamhaus DROP oder Emerging Threats",
               "",
               "---",
               f"*Datenquelle: [ScaniteX ASN Database](https://scanitex.com/en/resources/asn-database) (BGP via RIPE Stat, kein API-Key)*  ",
