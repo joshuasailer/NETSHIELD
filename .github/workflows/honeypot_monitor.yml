@@ -1,0 +1,132 @@
+name: Honeypot Monitor
+
+on:
+  schedule:
+    - cron: '0 23 * * *'   # täglich 23:00 UTC (vor Tor um 23:30 und Combined um 00:00)
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: write
+  actions: read
+  issues: none
+  packages: none
+  pull-requests: none
+  security-events: none
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  honeypot-monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: true
+
+      - name: Fetch Honeypot IPs
+        run: |
+          python3 << 'EOF'
+          import urllib.request, re, os
+          from datetime import datetime, timezone
+
+          now     = datetime.now(timezone.utc)
+          now_str = now.strftime("%Y-%m-%d %H:%M UTC")
+          IP_RE   = re.compile(r'\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b')
+
+          def fetch(url, timeout=30):
+              try:
+                  req = urllib.request.Request(url, headers={"User-Agent": "NETSHIELD-HoneypotMonitor/1.0"})
+                  with urllib.request.urlopen(req, timeout=timeout) as r:
+                      return r.read().decode("utf-8", errors="ignore")
+              except Exception as e:
+                  print(f"  FEHLER {url}: {e}")
+                  return None
+
+          def is_private(ip):
+              parts = list(map(int, ip.split(".")))
+              return (parts[0] == 10 or
+                      (parts[0] == 172 and 16 <= parts[1] <= 31) or
+                      (parts[0] == 192 and parts[1] == 168) or
+                      parts[0] in (0, 127) or parts[0] >= 224)
+
+          HONEYPOT_SOURCES = {
+              # Honeypot-spezifische Feeds (alle öffentlich, kein API-Key)
+              "yuexuana_honeypot":
+                  "https://raw.githubusercontent.com/yuexuana521/honeypot-blocklist/refs/heads/main/ip_list.txt",
+              "badpackets_honeypot":
+                  "https://raw.githubusercontent.com/badpackets/honeypot-threat-feed/main/honeypot_threat_feed.txt",
+              "threatmon_honeypot":
+                  "https://raw.githubusercontent.com/ThreatMon/ThreatMon-Daily-IPs/main/ThreatMon.txt",
+              "turris_honeypot":
+                  "https://view.sentinel.turris.cz/greylist-data/greylist-latest.csv",
+              "cymru_bogons":
+                  "https://www.team-cymru.org/Services/Bogons/fullbogons-ipv4.txt",
+              "sissden_honeypot":
+                  "https://raw.githubusercontent.com/stamparm/ipsum/master/levels/5.txt",
+          }
+
+          all_ips = set()
+          stats   = {}
+
+          for name, url in HONEYPOT_SOURCES.items():
+              text = fetch(url)
+              if text:
+                  ips = {ip for ip in IP_RE.findall(text)
+                         if not is_private(ip)}
+                  all_ips.update(ips)
+                  stats[name] = len(ips)
+                  print(f"  {name}: {len(ips)} IPs")
+              else:
+                  stats[name] = 0
+
+          HONEYPOT_FILE = "honeypot_ips.txt"
+          existing = set()
+          if os.path.exists(HONEYPOT_FILE):
+              with open(HONEYPOT_FILE) as f:
+                  existing = {l.strip() for l in f if l.strip() and not l.startswith("#")}
+
+          new_ips     = all_ips - existing
+          removed_ips = existing - all_ips
+          final_ips   = sorted(all_ips, key=lambda ip: tuple(int(o) for o in ip.split(".")))
+
+          with open(HONEYPOT_FILE, "w") as f:
+              f.write(f"# NETSHIELD Honeypot IP Blocklist\n")
+              f.write(f"# Aktualisiert: {now_str}\n")
+              f.write(f"# Quellen: {len(HONEYPOT_SOURCES)} | Gesamt: {len(final_ips)} | +{len(new_ips)} neu | -{len(removed_ips)} entfernt\n\n")
+              f.write("\n".join(final_ips) + "\n")
+
+          # Report
+          lines = ["# Honeypot Monitor – Report", f"**Aktualisiert:** {now_str}\n", "---",
+                   "| Quelle | IPs |", "|---|---|"]
+          for n, c in stats.items():
+              lines.append(f"| {'✅' if c > 0 else '❌'} `{n}` | {c} |")
+          lines += ["", "---", f"| Metrik | Wert |", "|---|---|",
+                    f"| Gesamt Honeypot-IPs | **{len(final_ips)}** |",
+                    f"| Neu | **+{len(new_ips)}** |", f"| Entfernt | **-{len(removed_ips)}** |",
+                    f"\n---\n*Generiert: {now_str}*"]
+
+          with open("honeypot_report.md", "w", encoding="utf-8") as f:
+              f.write("\n".join(lines))
+          print(f"Fertig: {len(final_ips)} Honeypot-IPs")
+          EOF
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add honeypot_ips.txt honeypot_report.md
+          if git diff --staged --quiet; then
+            echo "Keine Änderungen"
+          else
+            git commit -m "Honeypot Monitor: $(date -u '+%Y-%m-%d %H:%M') UTC"
+            git pull --rebase origin ${GITHUB_REF_NAME}
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
