@@ -1,4 +1,3 @@
-
 # 🛡️ NETSHIELD
 
 **Automatisiertes IP-Threat-Intelligence-System mit dynamischer Blacklist-Verwaltung**
@@ -21,26 +20,68 @@ NETSHIELD aggregiert, bewertet und bereinigt täglich IP-Bedrohungsdaten aus üb
 
 ## Architektur
 
-```
-130+ Threat Feeds (HQ + Non-HQ)
-        │
-        ▼
-┌─────────────────────────────────────────────────────┐
-│           Update Combined Blacklist (8x täglich)     │
-│                                                       │
-│  HQ-Feeds → setzen "last_seen" (Lebenszeit-Uhr)      │
-│  Non-HQ-Feeds → erhöhen nur feed_count (Score)       │
-│                                                       │
-│  IP ohne HQ-Bestätigung → altert aus nach 180 Tagen  │
-└─────────────────────┬───────────────────────────────┘
-                      │
-          ┌───────────┴───────────┐
-          ▼                       ▼
-  combined_threat_           active_blacklist_
-  blacklist_ipv4.txt         ipv4.txt
-  (Stufe 1 – 180 Tage)       (Stufe 2 – 30T + Score≥50)
-  Audit & Forschung          → OPNsense / Firewall
-```
+<svg width="100%" viewBox="0 0 680 480" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- HQ-Feeds -->
+  <rect x="40" y="30" width="180" height="52" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+  <text font-family="sans-serif" font-size="14" font-weight="500" fill="#085041" x="130" y="52" text-anchor="middle" dominant-baseline="central">HQ-Feeds</text>
+  <text font-family="sans-serif" font-size="12" fill="#0F6E56" x="130" y="70" text-anchor="middle" dominant-baseline="central">Feodo · Talos · AbuseIPDB · Spamhaus</text>
+
+  <!-- Non-HQ-Feeds -->
+  <rect x="460" y="30" width="180" height="52" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"/>
+  <text font-family="sans-serif" font-size="14" font-weight="500" fill="#2C2C2A" x="550" y="52" text-anchor="middle" dominant-baseline="central">Non-HQ-Feeds</text>
+  <text font-family="sans-serif" font-size="12" fill="#5F5E5A" x="550" y="70" text-anchor="middle" dominant-baseline="central">romainmarcoux · ipsum · littlejake</text>
+
+  <!-- Arrows from feeds into engine -->
+  <line x1="200" y1="82" x2="290" y2="148" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrow)" fill="none"/>
+  <line x1="460" y1="82" x2="390" y2="148" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- Arrow labels -->
+  <text font-family="sans-serif" font-size="12" fill="#444441" x="226" y="108" text-anchor="middle">setzt last_seen</text>
+  <text font-family="sans-serif" font-size="12" fill="#444441" x="444" y="108" text-anchor="middle">erhöht feed_count</text>
+
+  <!-- Main engine box -->
+  <rect x="210" y="150" width="260" height="80" rx="10" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+  <text font-family="sans-serif" font-size="14" font-weight="500" fill="#26215C" x="340" y="180" text-anchor="middle" dominant-baseline="central">Update Combined Blacklist</text>
+  <text font-family="sans-serif" font-size="12" fill="#534AB7" x="340" y="200" text-anchor="middle" dominant-baseline="central">8× täglich · seen_db · IP-Lebenszeit 180 Tage</text>
+
+  <!-- Arrow down center -->
+  <line x1="340" y1="230" x2="340" y2="280" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- Splitter lines -->
+  <line x1="150" y1="280" x2="150" y2="305" stroke="#B4B2A9" stroke-width="0.5" fill="none"/>
+  <line x1="530" y1="280" x2="530" y2="305" stroke="#B4B2A9" stroke-width="0.5" fill="none"/>
+  <line x1="150" y1="305" x2="530" y2="305" stroke="#B4B2A9" stroke-width="0.5" fill="none"/>
+  <line x1="150" y1="305" x2="150" y2="340" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)" fill="none"/>
+  <line x1="340" y1="305" x2="340" y2="340" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)" fill="none"/>
+  <line x1="530" y1="305" x2="530" y2="340" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- active_blacklist -->
+  <rect x="50" y="340" width="200" height="70" rx="8" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+  <text font-family="sans-serif" font-size="14" font-weight="500" fill="#4A1B0C" x="150" y="362" text-anchor="middle" dominant-baseline="central">active_blacklist</text>
+  <text font-family="sans-serif" font-size="12" fill="#993C1D" x="150" y="379" text-anchor="middle" dominant-baseline="central">30T + Score ≥ 50</text>
+  <text font-family="sans-serif" font-size="12" fill="#993C1D" x="150" y="395" text-anchor="middle" dominant-baseline="central">→ OPNsense / Firewall</text>
+
+  <!-- combined_blacklist -->
+  <rect x="240" y="340" width="200" height="70" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"/>
+  <text font-family="sans-serif" font-size="14" font-weight="500" fill="#2C2C2A" x="340" y="362" text-anchor="middle" dominant-baseline="central">combined_blacklist</text>
+  <text font-family="sans-serif" font-size="12" fill="#5F5E5A" x="340" y="379" text-anchor="middle" dominant-baseline="central">180 Tage · alle IPs</text>
+  <text font-family="sans-serif" font-size="12" fill="#5F5E5A" x="340" y="395" text-anchor="middle" dominant-baseline="central">→ Audit / SIEM</text>
+
+  <!-- confidence40 -->
+  <rect x="430" y="340" width="200" height="70" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+  <text font-family="sans-serif" font-size="14" font-weight="500" fill="#412402" x="530" y="362" text-anchor="middle" dominant-baseline="central">confidence40</text>
+  <text font-family="sans-serif" font-size="12" fill="#854F0B" x="530" y="379" text-anchor="middle" dominant-baseline="central">Score ≥ 50 · watchlist</text>
+  <text font-family="sans-serif" font-size="12" fill="#854F0B" x="530" y="395" text-anchor="middle" dominant-baseline="central">→ Analyse</text>
+
+  <!-- Bottom note -->
+  <text font-family="sans-serif" font-size="12" fill="#888780" x="340" y="450" text-anchor="middle">IP ohne HQ-Bestätigung → altert aus nach 180 Tagen · kehrt zurück wenn wieder aktiv</text>
+</svg>
 
 **Kernprinzip:** Nur HQ-Feeds (Feodo, Talos, AbuseIPDB, Spamhaus etc.) bestimmen die Lebenszeit einer IP. Statische Mega-Listen erhöhen den Confidence-Score, können eine IP aber nicht am Leben halten. Das System bereinigt automatisch was die Feeds selbst nicht können.
 
