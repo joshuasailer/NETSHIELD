@@ -1,63 +1,69 @@
 # Auto Feed Discovery – Report
-**Aktualisiert:** 2026-03-13 05:00 UTC
+**Aktualisiert:** 2026-03-13 13:13 UTC
 
 ---
 ## Zusammenfassung
 
 | Metrik | Wert |
 |---|---|
-| Repos gesucht | **676** |
-| Neu angenommen | **3** |
+| Repos gesucht | **483** |
+| Neu angenommen | **0** |
 | Bekannte Feeds re-fetched | **3** |
-| Abgelehnt (dieser Run) | **25** |
+| Abgelehnt (dieser Run) | **34** |
 | Feeds gesamt (aktiv) | **15** |
-| IPs in seen_db bestätigt | **65878** |
-| Neue IPs eingetragen | **154205** |
+| IPs in seen_db bestätigt | **13745** |
+| Neue IPs eingetragen | **40630** |
 | Combined Blacklist gesamt | **2,859,128** |
-| HQ-Referenz-IPs | **103046** |
+| HQ-Referenz-IPs | **103085** |
 
 ---
 ## ✅ Angenommene Feeds
 
 | Feed | Repo | IPs | Overlap | FP-Rate | Stars | Status |
 |---|---|---|---|---|---|---|
-| `hsenr_enterprise_honeypot_platform_v2` | [HsenR/enterprise-honeypot-platform](https://github.com/HsenR/enterprise-honeypot-platform) | 373 | 60.6% | 0.5% | 1 | 🔄 Update |
-| `cbuijs_badip_v2` | [cbuijs/badip](https://github.com/cbuijs/badip) | 5,207 | 61.9% | 1.5% | 4 | 🔄 Update |
-| `turntuptechnologies_iocs_v2` | [turntuptechnologies/iocs](https://github.com/turntuptechnologies/iocs) | 143 | 67.1% | 0.7% | 4 | 🆕 NEU |
-| `agent6_6_6_wordpress_login_blocklist_v2` | [Agent6-6-6/wordpress-login-blocklist](https://github.com/Agent6-6-6/wordpress-login-blocklist) | 20,394 | 1.6% | 0.0% | 4 | 🆕 NEU |
-| `borestad_firehol_mirror_v2` | [borestad/firehol-mirror](https://github.com/borestad/firehol-mirror) | 48,657 | 1.4% | 1.0% | 32 | 🔄 Update |
-| `kamalmjt_emerging_attackers` | [kamalmjt/emerging-attackers](https://github.com/kamalmjt/emerging-attackers) | 148,282 | 6.8% | 0.0% | 1 | 🆕 NEU |
+| `cbuijs_badip_v2` | [cbuijs/badip](https://github.com/cbuijs/badip) | 5,479 | 61.5% | 3.0% | 4 | 🔄 Update |
+| `borestad_firehol_mirror_v2` | [borestad/firehol-mirror](https://github.com/borestad/firehol-mirror) | 48,657 | 1.4% | 0.5% | 32 | 🔄 Update |
+| `hsenr_enterprise_honeypot_platform_v2` | [HsenR/enterprise-honeypot-platform](https://github.com/HsenR/enterprise-honeypot-platform) | 387 | 60.7% | 1.5% | 1 | 🔄 Update |
 
 ---
 ## ❌ Abgelehnte Repos
 
 | Repo | Grund |
 |---|---|
-| `akutemmanuel/StormSec` | Keine IP-Datei |
-| `Flowtriq/ftagent` | Keine IP-Datei |
-| `NOMARJ/sigil` | Keine IP-Datei |
-| `mthcht/ThreatIntel-Reports` | Keine IP-Datei |
-| `ryoshu404/statica` | Größe: 1 IPs |
-| `JaCraig/Canister` | Keine IP-Datei |
-| `0xvpr/Malicious-Software-Research` | Keine IP-Datei |
-| `OpoRuta/examenes-inap-auxiliar-administrativo` | Keine IP-Datei |
-| `Huluti/ossatrisk` | Keine IP-Datei |
-| `elliotllliu/agentshield` | Keine IP-Datei |
-| `peerhub-org/peerhub` | Keine IP-Datei |
-| `mchmarny/reputer` | Keine IP-Datei |
-| `franco0421/cunfyooz` | Keine IP-Datei |
-| `ajzbern/source-code` | Keine IP-Datei |
-| `scottalt/ai-email-threat-research` | Keine IP-Datei |
-| `exe-cut3/gcp-permissions-checker` | Keine IP-Datei |
-| `hacklcx/HFish` | Keine IP-Datei |
-| `Guivernoir/palisade-errors` | Keine IP-Datei |
-| `Abhishek-innovation/ShadowSploit` | Keine IP-Datei |
-| `DeadFox55YZ/ShadowSploit` | Keine IP-Datei |
-| `nbarrap/RedOpsToolkit` | Keine IP-Datei |
-| `LagZeroCode/HackWire` | Keine IP-Datei |
-| `Ahegaho/ExploitMaze` | Keine IP-Datei |
-| `DUVALL707/ExploitMaze` | Keine IP-Datei |
-| `uky007/ThreatFalcon` | Keine IP-Datei |
+| `panguard-ai/panguard-ai` | Keine IP-Datei |
+| `5m3thNetw0rk/TI-Analyst-Pro` | Keine IP-Datei |
+| `Yeti-Sec/capa-rs` | Keine IP-Datei |
+| `NeverMorewd/AsyncNavigation` | Keine IP-Datei |
+| `PeekAndPoke/ultra` | Keine IP-Datei |
+| `dangaogit/bun-server` | Keine IP-Datei |
+| `IOCoin/DIONS` | Keine IP-Datei |
+| `fooHQ/foojank` | Keine IP-Datei |
+| `Ahmedalaa9098/genaura-guard` | Keine IP-Datei |
+| `paulpaulperlas/ai-badword-scanner` | Keine IP-Datei |
+| `0xBoji/verifyos-cli` | Keine IP-Datei |
+| `studysk890/QianKunQuan` | Keine IP-Datei |
+| `sinhaparth5/wcag-scanner` | Keine IP-Datei |
+| `enderphan94/pikascan` | Keine IP-Datei |
+| `ConfigServerApps/service-blocklists` | Overlap zu gering: 0.0% |
+| `haivoDA22TTD/doc-share-microservices` | Keine IP-Datei |
+| `TeamDignitas/dignitas` | Keine IP-Datei |
+| `rabbinirob80/Data-Fusion-Contest-2026---3-` | Keine IP-Datei |
+| `samftggr/VEN0m-Ransomware` | Keine IP-Datei |
+| `YashAgni2372/ethical-keylogger` | Keine IP-Datei |
+| `MariFerraz1/MeowNiverse` | Keine IP-Datei |
+| `pompelmi/pompelmi` | Größe: 0 IPs |
+| `Henry575/Traffic-Surveillance-LPR` | Keine IP-Datei |
+| `Walllmat/verdict` | Keine IP-Datei |
+| `Silakos1/Codex-Windows` | Keine IP-Datei |
+| `timedust1626/maxphisher` | Keine IP-Datei |
+| `zeljkovranjes/brute` | Keine IP-Datei |
+| `barvhaim/HoneyMCP` | Keine IP-Datei |
+| `sinyuan1022/NetDefender` | Keine IP-Datei |
+| `Xorlent/PoE-Honeypot` | Keine IP-Datei |
+| `secwexen/secwexen-arsenal` | Keine IP-Datei |
+| `MISP/misp-galaxy` | Keine IP-Datei |
+| `H3llKa1ser/SOC-Assistant-Guide` | Keine IP-Datei |
+| `magikh0e/Wordlists` | Zu alt: 999d |
 
 ---
 ## 📋 Alle aktiven Auto-Feeds
@@ -72,13 +78,13 @@
 | `cbuijs_badip` | 4,646 | 61.4% | 4 | 2026-03-12 |
 | `maximewewer_heimdallblocklists` | 86,948 | 58.8% | 4 | 2026-03-12 |
 | `agent6_6_6_wordpress_login_blocklist` | 20,390 | 1.6% | 4 | 2026-03-12 |
-| `cbuijs_badip_v2` | 5,207 | 61.9% | 4 | 2026-03-13 |
+| `cbuijs_badip_v2` | 5,479 | 61.5% | 4 | 2026-03-13 |
 | `maximewewer_heimdallblocklists_v2` | 87,187 | 58.7% | 4 | 2026-03-12 |
 | `turntuptechnologies_iocs_v2` | 143 | 67.1% | 4 | 2026-03-13 |
 | `agent6_6_6_wordpress_login_blocklist_v2` | 20,394 | 1.6% | 4 | 2026-03-13 |
 | `hsenr_enterprise_honeypot_platform` | 459 | 68.4% | 1 | 2026-03-10 |
-| `hsenr_enterprise_honeypot_platform_v2` | 373 | 60.6% | 1 | 2026-03-13 |
+| `hsenr_enterprise_honeypot_platform_v2` | 387 | 60.7% | 1 | 2026-03-13 |
 | `kamalmjt_emerging_attackers` | 148,282 | 6.8% | 1 | 2026-03-13 |
 
 ---
-*Generiert: 2026-03-13 05:00 UTC*
+*Generiert: 2026-03-13 13:13 UTC*
