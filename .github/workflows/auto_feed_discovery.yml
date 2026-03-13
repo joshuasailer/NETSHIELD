@@ -508,7 +508,7 @@ jobs:
                   existing_f = set(db[ip].get("feeds", []))
                   if SOURCE_LABEL not in existing_f:
                       db[ip]["feeds"] = sorted(existing_f | {SOURCE_LABEL})
-                  db[ip]["today_count"] = db[ip].get("today_count", 0) + 1
+                  db[ip]["today_count"] = 1  # FIX Bug3: immer 1 setzen, nicht akkumulieren (combined überschreibt danach korrekt)
                   # Nur "last" aktualisieren wenn IP bereits stark bestätigt war
                   # (d.h. len(feeds) >= 2 schon vor diesem Run)
                   if len(db[ip].get("feeds", [])) >= 2:
@@ -532,11 +532,11 @@ jobs:
                   }
                   ingested_new += 1
 
-          # Aufnahme-Filter: mindestens 2 verschiedene Feeds (gesamt) oder HQ
-          db = {
-              ip: data for ip, data in db.items()
-              if len(data.get("feeds", [])) >= 2 or data.get("hq")
-          }
+          # FIX Bug2: Aufnahme-Filter hier ENTFERNT.
+          # Neu eingetragene IPs aus auto_feed_discovery haben zunächst nur 1 Feed
+          # (auto_feed_discovery) → der alte Filter löschte sie sofort wieder.
+          # Der combined-Workflow wendet seinen eigenen Filter korrekt an wenn er
+          # danach seen_db verarbeitet. Hier wird seen_db nur als Staging-Area befüllt.
 
           # 180-Tage-Ablauf (konsistent mit EXPIRY_DAYS in update_combined_blacklist)
           cutoff    = now - timedelta(days=180)
