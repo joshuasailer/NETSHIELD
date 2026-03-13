@@ -65,8 +65,14 @@ jobs:
           if os.path.exists(REPORT_FILE):
               with open(REPORT_FILE) as f:
                   for line in f:
-                      if f"{now_day}" in line and f"user={reporter}" in line and "ACCEPTED" in line:
-                          today_count += 1
+                      # Robustes Parsing: Datum steht exakt am Zeilenstart (Format: YYYY-MM-DD |)
+                      # Kein Substring-Match um False-Positives durch Usernamen mit Ziffern zu vermeiden
+                      parts = line.split(" | ")
+                      if len(parts) >= 3:
+                          line_date = parts[0].strip()
+                          line_user = parts[2].strip()  # z.B. "user=someuser"
+                          if line_date == now_day and line_user == f"user={reporter}" and "ACCEPTED" in line:
+                              today_count += 1
 
           if today_count >= MAX_REPORTS_PER_USER:
               with open(RESULT_FILE, "w") as f:

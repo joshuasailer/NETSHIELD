@@ -2,9 +2,9 @@ name: False Positive Checker
 
 on:
   schedule:
-    - cron: '30 5 * * *'   # täglich 05:30 UTC (30 Min vor Combined um 06:00)
-    - cron: '30 13 * * *'  # täglich 13:30 UTC (30 Min vor Combined um 14:00 – kein Konflikt)
-    - cron: '30 21 * * *'  # täglich 21:30 UTC (30 Min vor Combined um 22:00 – kein Konflikt)
+    - cron: '0 5 * * *'    # täglich 05:00 UTC (60 Min vor Combined um 06:00 – verhindert Git-Konflikt)
+    - cron: '0 13 * * *'   # täglich 13:00 UTC (60 Min Puffer vor Combined um 14:00)
+    - cron: '0 21 * * *'   # täglich 21:00 UTC (60 Min Puffer vor Combined um 22:00)
   workflow_dispatch:
 
 env:
