@@ -2,7 +2,7 @@ name: Duplicate Cleaner
 
 on:
   schedule:
-    - cron: '30 5 * * *'  # täglich 05:30 UTC (nach Auto-Discovery So 04:30+30min=05:00 → sicher; nach CVE-Mapper 04:00)
+    - cron: '30 5 * * *'  # täglich 05:30 UTC (30 Min vor Combined 06:00; nach Auto-Discovery So 04:30; nach CVE-Mapper 04:00)
   workflow_dispatch:
 
 env:
