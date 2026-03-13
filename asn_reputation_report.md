@@ -1,46 +1,49 @@
 # ASN Reputation Scorer – Report
-**Aktualisiert:** 2026-03-12 19:45 UTC  
+**Aktualisiert:** 2026-03-13 04:18 UTC  
 **Methode:** ScaniteX CIDR-Prefixlisten (kein API-Key, 100% BL-Coverage)  
-**Blacklist-IPs gesamt:** 2,859,128  
-**Davon in bekannten ASN-Ranges:** 661,471
+**Blacklist-IPs gesamt:** 3,112,983  
+**Davon in bekannten ASN-Ranges:** 686,547
 
 ---
 
 ## ASN-Übersicht (nach Score sortiert)
 
-| Rang | ASN | Organisation | Land | Score | BL-Hits | DROP | ET | Prefixes |
-|---|---|---|---|---|---|---|---|---|
-| 1 | AS12389 | Rostelecom | RU | 🔴 9999 | 9,688 | +0 | +0 | 3183 |
-| 2 | AS45102 | Alibaba Cloud | CN | 🔴 9999 | 28,614 | +0 | +0 | 877 |
-| 3 | AS132203 | Tencent Cloud | CN | 🔴 9999 | 14,481 | +0 | +0 | 1050 |
-| 4 | AS14061 | DigitalOcean | US | 🔴 9999 | 171,620 | +0 | +2 | 827 |
-| 5 | AS20473 | Vultr | US | 🔴 9999 | 16,001 | +0 | +0 | 1453 |
-| 6 | AS51167 | Contabo | DE | 🔴 9999 | 10,052 | +0 | +0 | 567 |
-| 7 | AS24940 | Hetzner | DE | 🔴 9999 | 20,169 | +0 | +0 | 82 |
-| 8 | AS63949 | Linode (Akamai) | US | 🔴 9999 | 7,634 | +0 | +2 | 341 |
-| 9 | AS16276 | OVH | FR | 🔴 9999 | 32,392 | +0 | +0 | 600 |
-| 10 | AS12876 | Scaleway | FR | 🔴 9999 | 7,131 | +0 | +0 | 22 |
-| 11 | AS31898 | Oracle Cloud | US | 🔴 9999 | 23,926 | +0 | +0 | 1971 |
-| 12 | AS16509 | Amazon AWS | US | 🔴 9999 | 277,786 | +0 | +2 | 14341 |
-| 13 | AS8075 | Microsoft Azure | US | 🔴 9999 | 32,600 | +0 | +0 | 931 |
-| 14 | AS8560 | IONOS | DE | 🔴 5330 | 2,660 | +0 | +0 | 462 |
-| 15 | AS47583 | Hostinger | LT | 🔴 3780 | 1,880 | +0 | +0 | 860 |
-| 16 | AS26496 | GoDaddy | US | 🔴 2990 | 1,490 | +0 | +0 | 184 |
-| 17 | AS22612 | Namecheap | US | 🔴 2872 | 1,426 | +0 | +0 | 312 |
-| 18 | AS36351 | IBM Cloud | US | 🔴 2292 | 1,141 | +0 | +0 | 328 |
-| 19 | AS46606 | Bluehost (Unified Layer) | US | 🔴 1570 | 780 | +0 | +0 | 285 |
+| Rang | ASN | Organisation | Land | Score | BL-Hits | Dichte/1M | DROP | ET | Prefixes |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | AS14061 | DigitalOcean | US | 🔴 106 | 180,880 | 59580.3 | +0 | +2 | 827 |
+| 2 | AS51167 | Contabo | DE | 🔴 100 | 10,523 | 22413.0 | +0 | +0 | 567 |
+| 3 | AS45102 | Alibaba Cloud | CN | 🟠 95 | 29,113 | 3057.1 | +0 | +0 | 877 |
+| 4 | AS132203 | Tencent Cloud | CN | 🟠 95 | 18,549 | 7755.2 | +0 | +0 | 1050 |
+| 5 | AS20473 | Vultr | US | 🟠 95 | 16,164 | 11806.4 | +0 | +0 | 1453 |
+| 6 | AS12389 | Rostelecom | RU | 🟠 85 | 10,259 | 596.0 | +0 | +0 | 3183 |
+| 7 | AS16509 | Amazon AWS | US | 🟠 81 | 281,496 | 1477.2 | +0 | +2 | 14341 |
+| 8 | AS12876 | Scaleway | FR | 🟠 80 | 7,692 | 13492.1 | +0 | +0 | 22 |
+| 9 | AS24940 | Hetzner | DE | 🟠 75 | 20,877 | 7427.2 | +0 | +0 | 82 |
+| 10 | AS16276 | OVH | FR | 🟠 75 | 35,070 | 7716.1 | +0 | +0 | 600 |
+| 11 | AS47583 | Hostinger | LT | 🟠 75 | 2,119 | 2671.0 | +0 | +0 | 860 |
+| 12 | AS22612 | Namecheap | US | 🟠 75 | 1,465 | 9561.7 | +0 | +0 | 312 |
+| 13 | AS31898 | Oracle Cloud | US | 🟠 75 | 24,351 | 5133.4 | +0 | +0 | 1971 |
+| 14 | AS63949 | Linode (Akamai) | US | 🟠 70 | 8,170 | 6440.8 | +0 | +0 | 341 |
+| 15 | AS26496 | GoDaddy | US | 🟡 65 | 1,535 | 1229.5 | +0 | +0 | 184 |
+| 16 | AS8560 | IONOS | DE | 🟡 65 | 2,866 | 3360.9 | +0 | +0 | 462 |
+| 17 | AS46606 | Bluehost (Unified Layer) | US | 🟡 60 | 937 | 1088.0 | +0 | +0 | 285 |
+| 18 | AS8075 | Microsoft Azure | US | 🟡 55 | 33,332 | 502.0 | +0 | +0 | 931 |
+| 19 | AS36351 | IBM Cloud | US | 🟡 50 | 1,149 | 281.9 | +0 | +0 | 328 |
 
 ---
 
-### Score-Formel
+### Score-Formel (normalisiert auf ASN-Größe)
 ```
-score = base_score + (BL-Treffer × 2) + (DROP-Bonus × 5) + (ET-Bonus × 3)
+score = A (Abuse-Dichte) + B (Absolute Präsenz) + C (Feed-Bonus) + D (Basis-Reputation)
+A: BL-Hits pro 1M IPs im ASN  → max 60
+B: Absolute BL-Treffer-Stufe   → max 20
+C: Spamhaus DROP + ET-Bonus    → max 10
+D: Basis-Reputation (RU/CN++)  → max 40
 ```
-- **base_score**: Basis-Reputation (RU/CN-Provider höher bewertet)
-- **BL-Treffer**: Blacklist-IPs die in ASN-Prefixes liegen (100% Coverage)
-- **DROP-Bonus**: IPs auch in Spamhaus DROP
-- **ET-Bonus**: IPs auch in Emerging Threats
+- **Abuse-Dichte**: verhindert dass große Netze (AWS) kleine (Contabo) verdrängen
+- **Absolute Präsenz**: große Netze mit viel Abuse bleiben trotzdem trackbar
+- **Feed-Bonus**: IPs auch in Spamhaus DROP oder Emerging Threats
 
 ---
 *Datenquelle: [ScaniteX ASN Database](https://scanitex.com/en/resources/asn-database) (BGP via RIPE Stat, kein API-Key)*  
-*Generiert: 2026-03-12 19:45 UTC*
+*Generiert: 2026-03-13 04:18 UTC*
