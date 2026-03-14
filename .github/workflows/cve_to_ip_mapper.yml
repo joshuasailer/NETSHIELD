@@ -80,7 +80,8 @@ jobs:
               # Botnet C2 IPs  
               "URLhaus Malware IPs":
                   "https://urlhaus.abuse.ch/downloads/text/",
-              # MISP Community C2 IPs (plain IPv4 list, kein CSV/JSON-Format)
+              # C2 Intel Feeds – IP_RE extrahiert erste Spalte (ioc) korrekt,
+              # Port-Nummern haben keine 4-Oktet-Struktur → kein Fehlmatch
               "MISP Botnet C2":
                   "https://raw.githubusercontent.com/drb-ra/C2IntelFeeds/master/feeds/IPC2s.csv",
               # Emerging Threats aktive Exploit-IPs
