@@ -100,6 +100,7 @@ NETSHIELD aggregiert, bewertet und bereinigt täglich IP-Bedrohungsdaten aus üb
 | [`cve_exploit_ips.txt`](cve_exploit_ips.txt) | CVE-Exploit & C2-Server | **0** | täglich 04:00 | IDS/IPS |
 | [`vpn_proxy_ranges.txt`](vpn_proxy_ranges.txt) | VPN/Proxy/Datacenter | **55,443** | wöchentlich Mo | Proxy-Erkennung |
 | [`honeypot_ips.txt`](honeypot_ips.txt) | Honeypot-bestätigte IPs | **6** | täglich 23:00 | Ergänzung |
+| [`honeydb_ips.txt`](honeydb_ips.txt) | HoneyDB Community Honeypot (API) | **0** | täglich 22:15 | Ergänzung |
 | [`bot_detector_blacklist_ipv4.txt`](bot_detector_blacklist_ipv4.txt) | Bot-Detector | **15,490** | täglich 23:45 | Web-Schutz |
 | [`asn_blocklist_firewall.txt`](asn_blocklist_firewall.txt) | Hochrisiko-ASNs (Score≥50) | **19** | täglich 02:00 | ASN-Blocking |
 
@@ -164,16 +165,17 @@ Feodo C2, Talos Intelligence, AbuseIPDB (API + Score100), Spamhaus DROP/EDROP, E
 |---|---|---|
 | **Update Combined Blacklist** | 8x täglich (alle 3h) | Haupt-Engine: Feeds laden, seen_db aktualisieren, Stufe 1+2 schreiben |
 | **Confidence Blacklist** | 8x täglich (15min nach Combined) | confidence40 + watchlist aus seen_db berechnen |
-| **False Positive Checker** | 3x täglich (05:30/13:30/21:30) | Whitelist-CIDRs prüfen, FP aus combined entfernen |
+| **False Positive Checker** | 3x täglich (05:00/13:00/20:00) | Whitelist-CIDRs prüfen, FP aus combined entfernen |
 | **Tor Exit Node Monitor** | täglich 23:30 | 6 Tor-Quellen aggregieren → tor_exit_nodes.txt |
 | **Honeypot Monitor** | täglich 23:00 | Honeypot-Feeds aggregieren → honeypot_ips.txt |
-| **Bot-Detector Blacklist** | täglich 23:45 | bot_detector_blacklist_ipv4.txt aktualisieren |
+| **HoneyDB Monitor** | täglich 22:15 | HoneyDB API abfragen → honeydb_ips.txt |
+| **Bot-Detector Blacklist** | täglich 22:45 | bot_detector_blacklist_ipv4.txt aktualisieren |
 | **CVE-to-IP Mapper** | täglich 04:00 | C2/Exploit-IPs → cve_exploit_ips.txt |
 | **Duplicate Cleaner** | täglich 04:30 | Duplikate in Sub-Listen bereinigen |
-| **VPN & Proxy Detector** | wöchentlich Mo 03:30 | vpn_proxy_ranges.txt aktualisieren |
+| **VPN & Proxy Detector** | wöchentlich Mo 03:45 | vpn_proxy_ranges.txt aktualisieren |
 | **Update All Countries IPv4** | Mo + Mi 02:30 | Länder/Kontinente/all_countries synchron erzeugen |
 | **Auto Feed Discovery** | wöchentlich So 04:30 | GitHub nach neuen IP-Feeds durchsuchen + bewerten |
-| **Geo-Tagger** | wöchentlich So 06:30 | Blacklist-IPs mit Länder-Geo-Daten anreichern |
+| **Geo-Tagger** | wöchentlich So 06:45 | Blacklist-IPs mit Länder-Geo-Daten anreichern |
 | **ASN Reputation Scorer** | täglich 02:00 | ASN-Reputationsscoring → asn_reputation_db.json |
 | **Score Decay Monitor** | wöchentlich So 07:00 | Alterungs-Report (read-only, löscht nichts) |
 | **Feed Health Monitor** | täglich 01:00 | Alle Feed-URLs auf Erreichbarkeit prüfen |
@@ -202,7 +204,7 @@ Verwende das Label `community-report` beim Erstellen des Issues.
 
 ```
 NETSHIELD/
-├── .github/workflows/          # 17 GitHub Actions Workflows
+├── .github/workflows/          # 19 GitHub Actions Workflows
 ├── continents/                 # IPv4-Ranges pro Kontinent
 ├── countries/                  # IPv4-Ranges pro Land
 │   ├── africa/
