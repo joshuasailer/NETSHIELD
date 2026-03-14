@@ -304,7 +304,7 @@ jobs:
                   },
                   "geo_tagger.yml": {
                       "bad":  r"^0\s+6\s+\*\s+\*\s+0$",
-                      "hint": "06:00 UTC Sonntag – Überschneidung mit false_positive_checker + combined. Fix: `30 6 * * 0` (06:30 UTC)"
+                      "hint": "06:00 UTC Sonntag – Überschneidung mit false_positive_checker + combined. Fix: `45 6 * * 0` (06:45 UTC)"
                   },
               }
               if name in KNOWN_CONFLICTS:

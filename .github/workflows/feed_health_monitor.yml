@@ -41,7 +41,7 @@ jobs:
           now     = datetime.now(timezone.utc)
           now_str = now.strftime("%Y-%m-%d %H:%M UTC")
 
-          # Alle 136 Feed-URLs (identisch mit update_combined_blacklist.yml)
+          # Alle 112 Feed-URLs (entsprechend update_combined_blacklist.yml – ohne LOCAL_FEEDS)
           FEEDS = {
               "cinsscore":                  "https://cinsscore.com/list/ci-badguys.txt",
               "cinsarmy":                   "https://cinsarmy.com/list/ci-badguys.txt",

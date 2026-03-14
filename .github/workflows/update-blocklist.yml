@@ -323,7 +323,14 @@ jobs:
                       with urllib.request.urlopen(url, timeout=timeout) as response:
                           return response.read().decode("utf-8"), None
                   except urllib.error.HTTPError as e:
-                      return None, e
+                      # 404 = Land hat keine IP-Ranges → sofort zurückgeben, kein Retry
+                      if e.code == 404:
+                          return None, e
+                      # Transiente Serverfehler → Retry
+                      if e.code in (429, 500, 502, 503, 504) and attempt < retries:
+                          time.sleep(attempt * 2)
+                      else:
+                          return None, e
                   except Exception as e:
                       if attempt < retries:
                           time.sleep(attempt * 2)
@@ -348,9 +355,14 @@ jobs:
                   all_ips.update(lines)
                   continent_ips[continent].update(lines)
                   country_data[cc] = (continent, name, sorted(lines, key=sort_key))
-                  print(f"[{i+1}/{len(countries)}] {cc} ({name}) → {len(lines)} entries")
+                  if lines:
+                      print(f"[{i+1}/{len(countries)}] {cc} ({name}) → {len(lines)} entries")
+                  else:
+                      # Datei vorhanden aber leer → Land/Insel hat keine registrierten IP-Ranges
+                      print(f"[{i+1}/{len(countries)}] {cc} ({name}) → 0 entries (keine IP-Ranges registriert)")
               elif isinstance(err, urllib.error.HTTPError) and err.code == 404:
-                  print(f"[{i+1}/{len(countries)}] {cc} ({name}) → 0 entries (404)")
+                  # 404 = Datei existiert nicht → Land hat keine IP-Ranges bei hackinggate
+                  print(f"[{i+1}/{len(countries)}] {cc} ({name}) → 0 entries (404 – keine IP-Ranges)")
                   country_data[cc] = (continent, name, [])
               elif isinstance(err, urllib.error.HTTPError):
                   print(f"[{i+1}/{len(countries)}] {cc} ({name}) → ERROR HTTP {err.code}")

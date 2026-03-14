@@ -430,9 +430,14 @@ jobs:
                   overlap     = 0
 
               # Kriterium 5: Format-Qualität (min. 30% IP-Zeilen)
-              total_lines = max(len([l for l in text.splitlines()
-                                     if l.strip() and not l.startswith("#")]), 1)
-              ip_ratio = len(ips) / total_lines
+              # Vergleich: eindeutige IPs vs. eindeutige Nicht-Kommentarzeilen
+              # (dedupliziert auf beiden Seiten, damit Feeds mit redundanten Zeilen
+              # nicht fälschlicherweise abgelehnt werden)
+              unique_lines = set(
+                  l.strip() for l in text.splitlines()
+                  if l.strip() and not l.startswith("#")
+              )
+              ip_ratio = len(ips) / max(len(unique_lines), 1)
               if ip_ratio < 0.30:
                   print(f"  ❌ Format-Qualität: {ip_ratio:.1%} IP-Zeilen (min. 30%)")
                   rejected_repos.add(full_name)
