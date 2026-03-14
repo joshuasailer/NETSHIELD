@@ -2,7 +2,7 @@ name: Geo-Tagger
 
 on:
   schedule:
-    - cron: '30 6 * * 0'  # Sonntag 06:30 UTC
+    - cron: '45 6 * * 0'  # Sonntag 06:45 UTC (verschoben von 06:30 – Kollision mit update_confidence_blacklist)
   workflow_dispatch:
 
 env:
@@ -119,7 +119,7 @@ jobs:
           for ip in blacklist_ips:
               try:
                   bl_addrs.append((ip, int(ipaddress.ip_address(ip))))
-              except:
+              except Exception:
                   pass
           bl_addrs.sort(key=lambda x: x[1])
           print(f"Gültige IPs für CIDR-Check: {len(bl_addrs):,}")
@@ -146,7 +146,7 @@ jobs:
               for cidr in CIDR_RE.findall(raw):
                   try:
                       networks.append(ipaddress.ip_network(cidr, strict=False))
-                  except:
+                  except Exception:
                       pass
 
               if not networks:

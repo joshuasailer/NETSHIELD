@@ -2,7 +2,7 @@ name: VPN & Proxy Detector
 
 on:
   schedule:
-    - cron: '30 3 * * 1'  # wöchentlich Montag 03:30 UTC (30min nach update-blocklist)
+    - cron: '45 3 * * 1'  # wöchentlich Montag 03:45 UTC (verschoben von 03:30 – Kollision mit update_confidence_blacklist)
   workflow_dispatch:
 
 env:
@@ -56,7 +56,7 @@ jobs:
               try:
                   ip = ipaddress.ip_address(entry.split("/")[0])
                   return ip.is_private or ip.is_loopback
-              except:
+              except Exception:
                   return True
 
           VPN_SOURCES = {
@@ -115,7 +115,7 @@ jobs:
                           cidr = prefix.get("ip_prefix", "")
                           if cidr and not is_private(cidr):
                               found_cidrs.add(cidr)
-                  except:
+                  except Exception:
                       pass
 
               all_ips.update(found_ips)

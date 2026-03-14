@@ -83,7 +83,7 @@ jobs:
               try:
                   last_dt  = datetime.strptime(last_seen,  "%Y-%m-%d").replace(tzinfo=timezone.utc)
                   first_dt = datetime.strptime(first_seen, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-              except:
+              except Exception:
                   continue
               days_ago    = (now - last_dt).days
               # Score basiert auf echten Bestätigungstagen (days_seen) + HQ-Bonus

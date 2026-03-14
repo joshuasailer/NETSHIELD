@@ -104,14 +104,14 @@ jobs:
           for cidr in WHITELIST_CIDRS:
               try:
                   whitelist_networks.append(ipaddress.ip_network(cidr, strict=False))
-              except:
+              except Exception:
                   pass
 
           def is_whitelisted(ip):
               try:
                   addr = ipaddress.ip_address(ip)
                   return any(addr in net for net in whitelist_networks)
-              except:
+              except Exception:
                   return False
 
           # ── Blacklist laden ───────────────────────────────────────────────

@@ -93,12 +93,15 @@ jobs:
 
           # Feed Health einlesen falls vorhanden
           if os.path.exists("feed_health_status.json"):
-              with open("feed_health_status.json") as f:
-                  fh = json.load(f)
-              s = fh.get("summary", {})
-              lines.append("---")
-              lines.append(f"## 🔍 Feed Health: ✅ {s.get('ok',0)} OK | ⚠️ {s.get('warn',0)} leer | ❌ {s.get('error',0)} Fehler\n")
-              lines.append(f"*Letzter Check: {fh.get('updated','–')} – Details: [feed_health_report.md](feed_health_report.md)*\n")
+              try:
+                  with open("feed_health_status.json") as f:
+                      fh = json.load(f)
+                  s = fh.get("summary", {})
+                  lines.append("---")
+                  lines.append(f"## 🔍 Feed Health: ✅ {s.get('ok',0)} OK | ⚠️ {s.get('warn',0)} leer | ❌ {s.get('error',0)} Fehler\n")
+                  lines.append(f"*Letzter Check: {fh.get('updated','–')} – Details: [feed_health_report.md](feed_health_report.md)*\n")
+              except Exception as e:
+                  print(f"WARNUNG: feed_health_status.json konnte nicht gelesen werden: {e}")
 
           # Workflow Health einlesen
           if os.path.exists("workflow_health_report.md"):

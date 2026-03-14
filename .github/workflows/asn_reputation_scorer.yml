@@ -111,7 +111,7 @@ jobs:
               try:
                   addr = ipaddress.ip_address(ip)
                   bl_addrs.append((ip, int(addr)))
-              except:
+              except Exception:
                   pass
           bl_addrs.sort(key=lambda x: x[1])
           bl_ints = [x[1] for x in bl_addrs]
@@ -124,7 +124,7 @@ jobs:
           for cidr in CIDR_RE.findall(drop_text):
               try:
                   drop_networks.append(ipaddress.ip_network(cidr, strict=False))
-              except:
+              except Exception:
                   pass
           print(f"  Spamhaus DROP: {len(drop_networks)} Netzwerke")
 
@@ -173,7 +173,7 @@ jobs:
               for cidr in CIDR_RE.findall(raw):
                   try:
                       networks.append(ipaddress.ip_network(cidr, strict=False))
-                  except:
+                  except Exception:
                       pass
 
               if not networks:
