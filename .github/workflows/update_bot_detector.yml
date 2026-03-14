@@ -2,7 +2,7 @@ name: Bot-Detector Blacklist
 
 on:
   schedule:
-    - cron: '45 23 * * *'   # täglich 23:45 UTC (15 Min vor Combined um 00:00)
+    - cron: '45 22 * * *'   # täglich 22:45 UTC (90 Min vor Combined 00:00; verschoben von 23:45 – nur 15min Puffer war zu knapp)
   workflow_dispatch:
 
 env:

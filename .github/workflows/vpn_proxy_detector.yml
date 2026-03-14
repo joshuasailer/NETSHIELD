@@ -214,7 +214,7 @@ jobs:
           cidrs_sorted = sorted(all_cidrs)
           ips_sorted   = sorted(all_ips, key=lambda ip: tuple(int(o) for o in ip.split(".")))
 
-          with open(VPN_FILE, "w") as f:
+          with open(VPN_FILE, "w", encoding="utf-8") as f:
               f.write(f"# VPN & Proxy Blocklist – NETSHIELD\n")
               f.write(f"# Aktualisiert: {now_str}\n")
               f.write(f"# Quellen: {len(VPN_SOURCES)}\n")

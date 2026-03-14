@@ -246,7 +246,7 @@ jobs:
           print(f"Watchlist (kein HQ, last=2000-01-01):  {skipped_watchlist} IPs (Score zu niedrig, ausstehend)")
           print(f"Übersprungen:                          {skipped} IPs (Datumsfehler)")
 
-          with open(OUT_40, "w") as f:
+          with open(OUT_40, "w", encoding="utf-8") as f:
               f.write(f"# NETSHIELD Blacklist – Hohe Konfidenz (Score ≥50/100)\n")
               f.write(f"# Aktualisiert: {now_str}\n")
               f.write(f"# Scoring: Quellen-Qualität(40) + Aktualität(30) + Persistenz(20) + Alter(10)\n")
@@ -254,7 +254,7 @@ jobs:
               for ip, conf in confidence40:
                   f.write(f"{ip}\n")
 
-          with open(OUT_WATCH, "w") as f:
+          with open(OUT_WATCH, "w", encoding="utf-8") as f:
               f.write(f"# NETSHIELD Watchlist – Mittlere Konfidenz (Score 25-49/100)\n")
               f.write(f"# Aktualisiert: {now_str}\n")
               f.write(f"# Eintraege: {len(confidence20)}\n\n")
