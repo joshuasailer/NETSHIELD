@@ -1,7 +1,7 @@
 # Workflow Health Checker – Report
-**Aktualisiert:** 2026-03-14 03:31 UTC
+**Aktualisiert:** 2026-03-14 15:52 UTC
 
-**Workflows:** 18 | ✅ 18 OK | ⚠️ 0 Warnung | ❌ 0 Fehler
+**Workflows:** 18 | ✅ 17 OK | ⚠️ 1 Warnung | ❌ 0 Fehler
 
 ---
 ## Übersicht
@@ -15,7 +15,7 @@
 | `duplicate_cleaner.yml` | ✅ OK | 0 | 0 | `30 5 * * *` |
 | `false_positive_checker.yml` | ✅ OK | 0 | 0 | `0 5 * * *`, `0 13 * * *`, `0 20 * * *` |
 | `feed_health_monitor.yml` | ✅ OK | 0 | 0 | `0 1 * * *` |
-| `geo_tagger.yml` | ✅ OK | 0 | 0 | `30 6 * * 0` |
+| `geo_tagger.yml` | ✅ OK | 0 | 0 | `45 6 * * 0` |
 | `honeypot_monitor.yml` | ✅ OK | 0 | 0 | `0 23 * * *` |
 | `netshield_report_generator.yml` | ✅ OK | 0 | 0 | `0,30 * * * *` |
 | `score_decay_monitor.yml` | ✅ OK | 0 | 0 | `0 7 * * 0` |
@@ -24,8 +24,16 @@
 | `update_bot_detector.yml` | ✅ OK | 0 | 0 | `45 23 * * *` |
 | `update_combined_blacklist.yml` | ✅ OK | 0 | 0 | `0 */3 * * *` |
 | `update_confidence_blacklist.yml` | ✅ OK | 0 | 0 | `30 0 * * *`, `30 3 * * *`, `30 6 * * *`, `30 9 * * *`, `30 12 * * *`, `30 15 * * *`, `30 18 * * *`, `30 21 * * *` |
-| `vpn_proxy_detector.yml` | ✅ OK | 0 | 0 | `30 3 * * 1` |
-| `workflow_health_checker.yml` | ✅ OK | 0 | 0 | `5 1 * * *` |
+| `vpn_proxy_detector.yml` | ✅ OK | 0 | 0 | `45 3 * * 1` |
+| `workflow_health_checker.yml` | ⚠️ WARNUNG | 0 | 1 | `5 1 * * *` |
 
 ---
-*Generiert: 2026-03-14 03:31 UTC | 18 Workflow-Dateien geprüft*
+## ⚠️ Warnungen im Detail
+
+### `workflow_health_checker.yml`
+
+- 🟡 `exit()` und `sys.exit()` gemischt verwendet – einheitlich `sys.exit()` bevorzugen
+
+
+---
+*Generiert: 2026-03-14 15:52 UTC | 18 Workflow-Dateien geprüft*
