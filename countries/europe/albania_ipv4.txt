@@ -1,5 +1,5 @@
 # NETSHIELD – Albania (AL) IPv4 Ranges
-# Aktualisiert: 2026-03-13 13:03 UTC
+# Aktualisiert: 2026-03-14 20:08 UTC
 # IP-Ranges: 240
 
 5.206.232.0/21

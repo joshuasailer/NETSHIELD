@@ -1,5 +1,5 @@
 # NETSHIELD – Puerto Rico (PR) IPv4 Ranges
-# Aktualisiert: 2026-03-13 13:03 UTC
+# Aktualisiert: 2026-03-14 20:08 UTC
 # IP-Ranges: 224
 
 23.128.16.0/24

@@ -1,9 +1,8 @@
 # NETSHIELD – United Kingdom (GB) IPv4 Ranges
-# Aktualisiert: 2026-03-13 13:03 UTC
-# IP-Ranges: 9110
+# Aktualisiert: 2026-03-14 20:08 UTC
+# IP-Ranges: 9109
 
 1.186.0.0/16
-2.26.0.0/15
 2.56.84.0/22
 2.56.148.0/22
 2.56.188.0/22

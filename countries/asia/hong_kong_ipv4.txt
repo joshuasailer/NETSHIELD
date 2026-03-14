@@ -1,5 +1,5 @@
 # NETSHIELD – Hong Kong (HK) IPv4 Ranges
-# Aktualisiert: 2026-03-13 13:03 UTC
+# Aktualisiert: 2026-03-14 20:08 UTC
 # IP-Ranges: 3292
 
 1.36.0.0/16

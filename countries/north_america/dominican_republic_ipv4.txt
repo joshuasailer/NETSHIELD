@@ -1,5 +1,5 @@
 # NETSHIELD – Dominican Republic (DO) IPv4 Ranges
-# Aktualisiert: 2026-03-13 13:03 UTC
+# Aktualisiert: 2026-03-14 20:08 UTC
 # IP-Ranges: 158
 
 5.183.80.0/22

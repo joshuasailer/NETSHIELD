@@ -1,5 +1,5 @@
 # NETSHIELD – Cameroon (CM) IPv4 Ranges
-# Aktualisiert: 2026-03-13 13:03 UTC
+# Aktualisiert: 2026-03-14 20:08 UTC
 # IP-Ranges: 61
 
 41.77.80.0/21

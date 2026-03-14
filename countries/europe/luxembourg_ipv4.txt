@@ -1,5 +1,5 @@
 # NETSHIELD – Luxembourg (LU) IPv4 Ranges
-# Aktualisiert: 2026-03-13 13:03 UTC
+# Aktualisiert: 2026-03-14 20:08 UTC
 # IP-Ranges: 550
 
 2.56.104.0/22

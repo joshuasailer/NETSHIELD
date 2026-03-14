@@ -1,5 +1,5 @@
 # NETSHIELD – Panama (PA) IPv4 Ranges
-# Aktualisiert: 2026-03-13 13:03 UTC
+# Aktualisiert: 2026-03-14 20:08 UTC
 # IP-Ranges: 165
 
 5.252.152.0/22
