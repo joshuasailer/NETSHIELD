@@ -1,5 +1,5 @@
 # Workflow Health Checker – Report
-**Aktualisiert:** 2026-03-15 19:34 UTC
+**Aktualisiert:** 2026-03-15 19:38 UTC
 
 **Workflows:** 19 | ✅ 13 OK | ⚠️ 6 Warnung | ❌ 0 Fehler
 
@@ -8,7 +8,6 @@
 
 | Datei | Check | Detail |
 |---|---|---|
-| `workflow_health_checker.yml + workflow_health_checker.yml` | Cron-Kollision | '(.+?)' – beide Workflows laufen gleichzeitig |
 | `community_ip_report.yml` | Encoding fehlt | Block 0: open(..., 'w') ohne encoding= – UnicodeEncodeError möglich |
 | `duplicate_cleaner.yml` | Encoding fehlt | Block 0: open(..., 'w') ohne encoding= – UnicodeEncodeError möglich |
 | `false_positive_checker.yml` | Encoding fehlt | Block 0: open(..., 'w') ohne encoding= – UnicodeEncodeError möglich |
@@ -38,7 +37,7 @@
 | `update_combined_blacklist.yml` | ✅ OK | 0 | 0 | `0 */3 * * *` |
 | `update_confidence_blacklist.yml` | ✅ OK | 0 | 0 | `30 0 * * *`, `30 3 * * *`, `30 6 * * *`, `30 9 * * *`, `30 12 * * *`, `30 15 * * *`, `30 18 * * *`, `30 21 * * *` |
 | `vpn_proxy_detector.yml` | ✅ OK | 0 | 0 | `45 3 * * 1` |
-| `workflow_health_checker.yml` | ✅ OK | 0 | 0 | `15 1 * * *`, `(.+?)`, `(.+?)` |
+| `workflow_health_checker.yml` | ✅ OK | 0 | 0 | `15 1 * * *` |
 
 ---
-*Generiert: 2026-03-15 19:34 UTC | 19 Workflow-Dateien geprüft*
+*Generiert: 2026-03-15 19:38 UTC | 19 Workflow-Dateien geprüft*
