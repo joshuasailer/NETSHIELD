@@ -132,8 +132,6 @@ jobs:
                           count += 1
               return count
 
-          # Dateien → Anzeigeformat im README
-          # Format: Dateiname → (README-Linktext, Formatierungsfunktion)
           README_COUNTS = {
               "combined_threat_blacklist_ipv4.txt":    lambda n: f"**{n:,}**",
               "active_blacklist_ipv4.txt":             lambda n: f"**{n:,}**",
@@ -145,6 +143,7 @@ jobs:
               "bot_detector_blacklist_ipv4.txt":       lambda n: f"**{n:,}**",
               "abuseipdb_api_blacklist.txt":           lambda n: f"**{n:,}**",
               "honeypot_ips.txt":                      lambda n: f"**{n:,}**",
+              "honeydb_ips.txt":                       lambda n: f"**{n:,}**",
               "asn_blocklist_firewall.txt":             lambda n: f"**{n:,}**",
           }
 
@@ -164,27 +163,67 @@ jobs:
 
               formatted = fmt(count)
 
-              # Regex: Tabellenzeile mit diesem Dateinamen, ersetzt den letzten Spaltenwert
-              # Beispiel: | [combined_...](url) | ... | **2.344.956** |
-              # Zwei Patterns: (1) Link-Zeile [datei](url), (2) Code-Zeile `datei`
+              # ── FIX: Robustes Regex das korrekt die Einträge-Spalte (3. Spalte) trifft ──
+              #
+              # README-Tabellenformat:
+              #   | [`datei.txt`](datei.txt) | Beschreibung | **Zahl** | Update | Empfohlen |
+              #
+              # Das alte Pattern matched nur 1 Pipe nach dem Dateinamen → trifft die
+              # Beschreibungs-Spalte statt die Einträge-Spalte.
+              # Das neue Pattern matched explizit 2 Pipes nach dem Dateinamen:
+              #   Gruppe 1: alles bis inkl. "| Beschreibung |"
+              #   Gruppe 2: der zu ersetzende Zahlenwert
+              #   Gruppe 3: " |" danach (Update-Spalte folgt)
+              #
+              # Pattern für Link-Zeilen:  | [`datei`](datei) | Beschreibung | **Zahl** |
               pattern_link = (
-                  r'(\|\s*\[?' + re.escape(filename) + r'\]?\([^)]*\)\s*\|[^|]*\|)\s*[^|]+(\s*\|)'
+                  r'(\|\s*\[`?' + re.escape(filename) + r'`?\]\([^)]*\)\s*\|[^|]*\|)\s*[^|]+?(\s*\|)'
               )
+              # Pattern für Code-Zeilen:  | `datei` | Beschreibung | **Zahl** |
               pattern_code = (
-                  r'(\|[^|]*`' + re.escape(filename) + r'`[^|]*\|[^|]*\|)\s*[^|]+(\s*\|)'
+                  r'(\|[^|]*`' + re.escape(filename) + r'`[^|]*\|[^|]*\|)\s*[^|]+?(\s*\|)'
               )
+
+              matched = False
+
+              # Versuche zuerst Link-Pattern (bevorzugt, da README Links verwendet)
               new_readme, n1 = re.subn(pattern_link, rf'\1 {formatted} \2', readme)
               if n1 > 0:
                   readme = new_readme
-              new_readme, n2 = re.subn(pattern_code, rf'\1 {formatted} \2', readme)
-              if n2 > 0:
-                  readme = new_readme
-              n = n1 + n2
-              if n > 0:
+                  matched = True
+                  print(f"  ✅ {filename}: {formatted} (Link-Pattern, {n1} Treffer)")
+
+              # Fallback: Code-Pattern (backtick ohne Link)
+              if not matched:
+                  new_readme, n2 = re.subn(pattern_code, rf'\1 {formatted} \2', readme)
+                  if n2 > 0:
+                      readme = new_readme
+                      matched = True
+                      print(f"  ✅ {filename}: {formatted} (Code-Pattern, {n2} Treffer)")
+
+              if matched:
                   changes += 1
-                  print(f"  ✅ {filename}: {formatted} ({n} Treffer)")
               else:
-                  print(f"  ⚠️  {filename}: kein Match in README-Tabelle")
+                  # Letzter Fallback: direktes Suchen nach dem Dateinamen in der Zeile
+                  # und Ersetzen des **Zahl**-Musters in der dritten Spalte
+                  lines_out = []
+                  replaced  = False
+                  for line in readme.splitlines(keepends=True):
+                      if f"`{filename}`" in line or f"({filename})" in line:
+                          # Spalten aufteilen und dritte (Index 3) ersetzen
+                          cols = line.split("|")
+                          # cols[0]=leer, cols[1]=Datei, cols[2]=Beschreibung, cols[3]=Einträge
+                          if len(cols) >= 5:
+                              cols[3] = f" {formatted} "
+                              line = "|".join(cols)
+                              replaced = True
+                      lines_out.append(line)
+                  if replaced:
+                      readme = "".join(lines_out)
+                      changes += 1
+                      print(f"  ✅ {filename}: {formatted} (Spalten-Fallback)")
+                  else:
+                      print(f"  ⚠️  {filename}: kein Match in README-Tabelle")
 
           if changes > 0:
               with open("README.md", "w", encoding="utf-8") as f:
