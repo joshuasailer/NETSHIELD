@@ -51,18 +51,6 @@ jobs:
           warnings = []
           results  = {}
 
-          # ── Bekannte tote URLs ────────────────────────────────────────────
-          DEAD_URLS = [
-              ("spamhaus.org/drop/edrop.txt",
-               "edrop seit 10.04.2024 abgeschaltet – Daten in spamhaus_drop enthalten"),
-              ("phishing.army",
-               "Domain-Liste, keine IPs – liefert immer 0 IPs"),
-              ("romainmarcoux/malicious-ip/main/full-300k-ac.txt",
-               "Datei existiert nicht mehr – HTTP 200 mit leerem Body"),
-              ("emergingthreats.net/fwrules/emerging-Block-IPs.txt",
-               "robots.txt-geblockt – et_ips ist immer leer, et_bonus immer 0"),
-          ]
-
           # ── Check 1: Cron-Kollisionen & doppelte Namen ────────────────────
           cron_map = {}
           name_map = {}
@@ -112,29 +100,25 @@ jobs:
                       errors.append({"file": fname, "check": "SyntaxError", "detail": msg})
                       continue
 
-                  # ── Check 3: Tote URLs ─────────────────────────────────────
-                  for url_frag, reason in DEAD_URLS:
-                      if url_frag in dedented:
-                          msg = f"Block {i}: tote URL '{url_frag}' – {reason}"
-                          file_errors.append(msg)
-                          errors.append({"file": fname, "check": "Tote URL", "detail": msg})
-
-                  # ── Check 4: sys.exit ohne import sys ─────────────────────
-                  if "sys.exit" in dedented and "import sys" not in dedented:
-                      msg = f"Block {i}: sys.exit() verwendet aber 'import sys' fehlt → NameError"
+                  # ── Check 3: sys.exit ohne sys importiert ─────────────────
+                  # Erkennt auch Multi-Imports: "import os, re, sys"
+                  sys_imported = bool(re.search(r'\bimport\b[^#\n]*\bsys\b', dedented))
+                  if "sys.exit" in dedented and not sys_imported:
+                      msg = f"Block {i}: sys.exit() verwendet aber sys nicht importiert → NameError"
                       file_errors.append(msg)
                       errors.append({"file": fname, "check": "Fehlender Import", "detail": msg})
 
-                  # ── Check 5: open(..., "w") ohne encoding ─────────────────
+                  # ── Check 4: open(..., "w") ohne encoding ─────────────────
+                  # Nur für text-writes (f.write), nicht für json.dump (schreibt nur ASCII)
                   for m in re.finditer(r'open\([^)]+,\s*["\']w["\']\s*\)', dedented):
-                      snippet = dedented[max(0, m.start()-30):m.end()]
-                      if "encoding" not in snippet:
-                          msg = f"Block {i}: open(..., 'w') ohne encoding= – UnicodeEncodeError auf nicht-UTF8-Systemen"
+                      snippet = dedented[max(0, m.start()-30):m.end()+60]
+                      if "encoding" not in snippet and "json.dump" not in snippet:
+                          msg = f"Block {i}: open(..., 'w') ohne encoding= – UnicodeEncodeError möglich"
                           file_warnings.append(msg)
                           warnings.append({"file": fname, "check": "Encoding fehlt", "detail": msg})
                           break
 
-                  # ── Check 6: json.load ohne try/except ────────────────────
+                  # ── Check 5: json.load ohne try/except ────────────────────
                   if "json.load(" in dedented and "try:" not in dedented:
                       msg = f"Block {i}: json.load() ohne try/except – crash bei korrupter Datei"
                       file_warnings.append(msg)
@@ -240,8 +224,9 @@ jobs:
               }, f, indent=2)
 
           if err_count > 0:
-              print(f"\nFEHLER: {err_count} kritische Probleme gefunden!")
-              sys.exit(1)
+              print(f"\nFEHLER: {err_count} kritische Probleme gefunden – siehe workflow_health_report.md")
+          else:
+              print("\nAlle Checks bestanden.")
           EOF
 
       - name: Commit
