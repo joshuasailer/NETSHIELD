@@ -96,7 +96,7 @@ jobs:
               "subnet_blocklist_new":       "https://raw.githubusercontent.com/coyote-nl/blocklist/refs/heads/main/subnet-blocklist-new",
               "bdix_prefix_ipv4":           "https://raw.githubusercontent.com/tushroy/bdix-isp-blocks/refs/heads/master/bdix-prefix_ipv4.txt",
               "urlhaus_ips":                "https://urlhaus.abuse.ch/downloads/text/",
-              "bazaar_c2":                  "https://bazaar.abuse.ch/export/txt/cscb/recent/",
+              # bazaar_c2 entfernt: Endpunkt liefert Hash-Listen, keine IPs → 0 Treffer
               "firehol_level1":             "https://iplists.firehol.org/files/firehol_level1.netset",
               "firehol_level2":             "https://iplists.firehol.org/files/firehol_level2.netset",
               "firehol_level3":             "https://iplists.firehol.org/files/firehol_level3.netset",
