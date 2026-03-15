@@ -155,7 +155,7 @@ jobs:
           removed_ips = existing - all_ips
           final_ips   = sorted(all_ips, key=lambda e: (tuple(int(x) for x in e.split('/')[0].split('.')), e))
 
-          with open(HONEYPOT_FILE, "w") as f:
+          with open(HONEYPOT_FILE, "w", encoding="utf-8") as f:
               f.write(f"# NETSHIELD Honeypot IP Blocklist\n")
               f.write(f"# Aktualisiert: {now_str}\n")
               f.write(f"# Quellen: {len(HONEYPOT_SOURCES)} | Gesamt: {len(final_ips)} | +{len(new_ips)} neu | -{len(removed_ips)} entfernt\n\n")

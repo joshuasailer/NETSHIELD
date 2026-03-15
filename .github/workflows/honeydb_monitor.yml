@@ -224,7 +224,7 @@ jobs:
           removed_ips = existing - all_ips
           final_ips   = sorted(all_ips, key=lambda ip: tuple(int(o) for o in ip.split(".")))
 
-          with open(HONEYDB_FILE, "w") as f:
+          with open(HONEYDB_FILE, "w", encoding="utf-8") as f:
               f.write(f"# NETSHIELD HoneyDB IP Blocklist\n")
               f.write(f"# Aktualisiert: {now_str}\n")
               f.write(f"# Quelle: honeydb.io (Community Honeypot Network)\n")

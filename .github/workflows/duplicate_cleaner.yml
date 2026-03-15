@@ -146,7 +146,7 @@ jobs:
                       cleaned.append(line)
 
               if removed > 0:
-                  with open(path, "w") as f:
+                  with open(path, "w", encoding="utf-8") as f:
                       f.writelines(cleaned)
                   print(f"\n  ✅ {path}: {removed} Duplikate entfernt")
               else:

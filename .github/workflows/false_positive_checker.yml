@@ -157,7 +157,7 @@ jobs:
               cleaned_lines.append(line)
 
           if removed_count > 0:
-              with open(BLACKLIST, "w") as f:
+              with open(BLACKLIST, "w", encoding="utf-8") as f:
                   f.writelines(cleaned_lines)
               print(f"Blacklist bereinigt: {removed_count} False Positives entfernt")
 

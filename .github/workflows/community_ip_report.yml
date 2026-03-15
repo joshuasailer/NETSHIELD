@@ -75,7 +75,7 @@ jobs:
                               today_count += 1
 
           if today_count >= MAX_REPORTS_PER_USER:
-              with open(RESULT_FILE, "w") as f:
+              with open(RESULT_FILE, "w", encoding="utf-8") as f:
                   f.write(f"RATE_LIMITED|{reporter}|{today_count}")
               print(f"Rate-Limit erreicht für {reporter}: {today_count} Reports heute")
               sys.exit(0)
@@ -93,7 +93,7 @@ jobs:
                   ip = fallback.group(1)
 
           if not ip:
-              with open(RESULT_FILE, "w") as f:
+              with open(RESULT_FILE, "w", encoding="utf-8") as f:
                   f.write("NO_IP_FOUND||")
               print("Keine IP im Issue gefunden")
               sys.exit(0)
@@ -129,7 +129,7 @@ jobs:
                   return False
 
           if not is_valid_public_ipv4(ip):
-              with open(RESULT_FILE, "w") as f:
+              with open(RESULT_FILE, "w", encoding="utf-8") as f:
                   f.write(f"INVALID_IP|{ip}|")
               print(f"Ungültige IP: {ip}")
               sys.exit(0)
@@ -203,7 +203,7 @@ jobs:
               f.write(f"{now_day} | issue=#{issue_number} | user={reporter} | ip={ip} | type={attack_type} | action={action} | ACCEPTED\n")
 
           # ── Ergebnis für nächsten Step speichern ──────────────────────────
-          with open(RESULT_FILE, "w") as f:
+          with open(RESULT_FILE, "w", encoding="utf-8") as f:
               f.write(f"{action}|{ip}|{attack_type}")
 
           print(f"Fertig: {action} – IP {ip} ({attack_type})")
