@@ -52,11 +52,16 @@ jobs:
           results  = {}
 
           # ── Check 1: Cron-Kollisionen & doppelte Namen ────────────────────
+          # Cron-Regex matcht nur echte Cron-Expressions (Ziffern, *, /, ,)
+          # und explizit NICHT den eigenen Dateinamen (verhindert Self-Match)
+          SELF = os.path.basename(__file__) if hasattr(__file__, '__file__') else "workflow_health_checker.yml"
+          cron_re = re.compile(r"cron:\s*'([\d\s*/,]+)'")
           cron_map = {}
           name_map = {}
           for fname in files:
               content = open(f"{WORKFLOWS_DIR}/{fname}").read()
-              for cron in re.findall(r"cron: '(.+?)'", content):
+              for cron in cron_re.findall(content):
+                  cron = cron.strip()
                   cron_map.setdefault(cron, []).append(fname)
               m = re.search(r"^name:\s*(.+)", content, re.M)
               if m:
@@ -160,7 +165,7 @@ jobs:
                   "blocks":   len(blocks),
                   "errors":   file_errors,
                   "warnings": file_warnings,
-                  "cron":     re.findall(r"cron: '(.+?)'", content),
+                  "cron":     cron_re.findall(content),
               }
 
               icon = "❌" if file_errors else ("⚠️" if file_warnings else "✅")
