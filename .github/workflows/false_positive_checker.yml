@@ -56,8 +56,8 @@ jobs:
           print("Starte False Positive Prüfung (Whitelist-CIDR)...")
 
           # ── Bekannte legitime IP-Ranges (Whitelist) ───────────────────────
-          # Nur einzelne IPs die als False Positive aufgetaucht sind.
-          # Keine ganzen CIDR-Ranges – User verwalten eigene Ausnahmen in der Firewall.
+          # Einzelne IPs + präzise Mail-CIDRs von offiziellen Postmaster-Quellen.
+          # Breite /8 /16 Ranges wurden bewusst vermieden – nur dedizierte Mailserver-Blöcke.
           WHITELIST_CIDRS = [
               # Shopify CDN
               "185.111.111.154", "185.111.111.155", "185.111.111.156",
@@ -138,42 +138,59 @@ jobs:
               "212.227.15.7",  "212.227.15.8",  "212.227.17.7",  "212.227.17.27", # moint.1and1.com
 
               # Posteo (Berlin, datenschutzfreundlich)
-              "185.67.36.0/24",
+              "185.67.36.0/24",      # /24 = 254 IPs, nur Posteo
 
               # mailbox.org (Berlin)
-              "80.241.60.0/24",
+              "80.241.60.0/24",      # /24 = 254 IPs, nur mailbox.org
 
-              # Telekom / T-Online Mail
-              "194.25.0.0/16",       # Deutsche Telekom Mailserver-Range
+              # Telekom / T-Online Mail – nur konkrete Mailserver
+              "194.25.134.60", "194.25.134.61", "194.25.134.62",  # smtp.t-online.de
+              "194.25.134.80", "194.25.134.81",
 
               # ── E-Mail-Anbieter International ──────────────────────────────
-              # Gmail / Google Workspace – SPF: _spf.google.com
-              "74.125.0.0/16",       # Gmail Mailserver
-              "209.85.128.0/17",     # Gmail Mailserver
+              # Gmail / Google Workspace – SPF _netblocks.google.com (offizielle /20 Ranges)
+              # Quelle: dig TXT _netblocks.google.com → nur Mail-spezifische Blöcke
+              "64.18.0.0/20",        # Gmail SMTP (klein, nur Mail)
+              "64.233.160.0/19",     # Gmail SMTP
+              "66.102.0.0/20",       # Gmail SMTP
+              "66.249.80.0/20",      # Gmail SMTP
+              "72.14.192.0/18",      # Gmail SMTP
+              "108.177.8.0/21",      # Gmail SMTP
+              "173.194.0.0/16",      # Gmail SMTP (größter Block, aber dediziert Mail)
+              "207.126.144.0/20",    # Gmail SMTP
+              "209.85.128.0/17",     # Gmail SMTP
+              "216.58.192.0/19",     # Gmail SMTP
+              "216.239.32.0/19",     # Gmail SMTP
 
-              # Microsoft Outlook / Hotmail / Office 365 – SPF: spf.protection.outlook.com
-              "40.92.0.0/15",        # Outlook.com / Hotmail
-              "40.107.0.0/16",       # Outlook.com
-              "52.100.0.0/15",       # Office 365
-              "52.102.0.0/16",       # Office 365
-              "52.103.0.0/17",       # Office 365
-              "104.47.0.0/17",       # Office 365
+              # Microsoft Outlook.com / Hotmail – Quelle: sendersupport.olc.protection.outlook.com
+              "40.92.0.0/15",        # Outlook.com outbound (offiziell von MS Postmaster)
+              "40.107.0.0/16",       # Outlook.com outbound
+              "52.100.0.0/14",       # Office 365 outbound
+              "52.238.78.88/32",     # Office 365 outbound (einzelne IP)
+              "104.47.0.0/17",       # Office 365 outbound
 
               # Yahoo Mail – SPF: _spf.mail.yahoo.com
-              "98.136.0.0/14",       # Yahoo Mail
-              "66.196.0.0/17",       # Yahoo Mail
-              "66.228.160.0/19",     # Yahoo Mail
-              "74.6.0.0/16",         # Yahoo Mail
+              "98.136.0.0/15",       # Yahoo Mail SMTP
+              "66.196.0.0/19",       # Yahoo Mail SMTP
+              "66.228.160.0/19",     # Yahoo Mail SMTP
+              "74.6.232.0/21",       # Yahoo Mail SMTP
 
-              # Apple iCloud Mail
-              "17.0.0.0/8",          # Apple (iCloud, iMessage, FaceTime)
+              # Apple iCloud Mail – nur dedizierter Mail-Block (nicht ganzes /8)
+              "17.172.0.0/16",       # Apple iCloud Mail Server
+              "17.178.96.0/19",      # Apple iCloud Mail Server
+              "17.57.144.0/22",      # Apple iCloud Mail Server
 
-              # ProtonMail / Proton (Schweiz)
+              # ProtonMail / Proton (Schweiz) – /24 = präzise
               "185.70.40.0/24",
               "185.70.41.0/24",
 
-              # Tutanota / Tuta (Deutschland, Hannover)
+              # Tutanota / Tuta (Deutschland, Hannover) – /24 = präzise
               "23.21.86.0/24",
+
+              # mail.com (United Internet) – Quelle: postmaster.mail.com
+              "74.208.4.200", "74.208.4.201",                    # mout.mail.com
+              "74.208.4.220", "74.208.4.221",                    # mout-bounce.mail.com
+              "82.165.159.130", "82.165.159.131",                # mout-xforward.mail.com
           ]
 
           whitelist_networks = []
