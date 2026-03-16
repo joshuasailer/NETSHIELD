@@ -1,21 +1,21 @@
 # 🛡 NETSHIELD Report
-**Aktualisiert:** 2026-03-16 02:52 UTC
+**Aktualisiert:** 2026-03-16 05:21 UTC
 
 ---
 ## 📊 Listen-Übersicht
 
 | Datei | Beschreibung | IPs | Letzte Änderung |
 |---|---|---:|---|
-| ✅ `combined_threat_blacklist_ipv4.txt` | Stufe 1 – Alle IPs (180 Tage) | **3,920,354** | 2026-03-16 02:52 UTC |
-| ✅ `active_blacklist_ipv4.txt` | Stufe 2 – Aktiv (30 Tage) → OPNsense | **2,782,637** | 2026-03-16 02:52 UTC |
-| ✅ `blacklist_confidence40_ipv4.txt` | Hohe Konfidenz (≥40%) | **2,331,037** | 2026-03-16 02:52 UTC |
-| ✅ `watchlist_confidence20to39_ipv4.txt` | Watchlist (20-39%) | **528,091** | 2026-03-16 02:52 UTC |
-| ✅ `tor_exit_nodes.txt` | Tor Exit Nodes | **7,839** | 2026-03-16 02:52 UTC |
-| ✅ `cve_exploit_ips.txt` | CVE Exploit IPs | **2,692** | 2026-03-16 02:52 UTC |
-| ✅ `vpn_proxy_ranges.txt` | VPN / Proxy Ranges | **55,440** | 2026-03-16 02:52 UTC |
-| ✅ `bot_detector_blacklist_ipv4.txt` | Bot-Detector Blacklist | **17,954** | 2026-03-16 02:52 UTC |
-| ✅ `honeypot_ips.txt` | Honeypot IPs | **13,956** | 2026-03-16 02:52 UTC |
-| ✅ `honeydb_ips.txt` | HoneyDB Community Honeypot (API) | **11,306** | 2026-03-16 02:52 UTC |
+| ✅ `combined_threat_blacklist_ipv4.txt` | Stufe 1 – Alle IPs (180 Tage) | **3,922,030** | 2026-03-16 05:21 UTC |
+| ✅ `active_blacklist_ipv4.txt` | Stufe 2 – Aktiv (30 Tage) → OPNsense | **2,780,667** | 2026-03-16 05:21 UTC |
+| ✅ `blacklist_confidence40_ipv4.txt` | Hohe Konfidenz (≥40%) | **2,331,037** | 2026-03-16 05:21 UTC |
+| ✅ `watchlist_confidence20to39_ipv4.txt` | Watchlist (20-39%) | **528,091** | 2026-03-16 05:21 UTC |
+| ✅ `tor_exit_nodes.txt` | Tor Exit Nodes | **7,839** | 2026-03-16 05:21 UTC |
+| ✅ `cve_exploit_ips.txt` | CVE Exploit IPs | **2,692** | 2026-03-16 05:21 UTC |
+| ✅ `vpn_proxy_ranges.txt` | VPN / Proxy Ranges | **55,440** | 2026-03-16 05:21 UTC |
+| ✅ `bot_detector_blacklist_ipv4.txt` | Bot-Detector Blacklist | **17,954** | 2026-03-16 05:21 UTC |
+| ✅ `honeypot_ips.txt` | Honeypot IPs | **13,956** | 2026-03-16 05:21 UTC |
+| ✅ `honeydb_ips.txt` | HoneyDB Community Honeypot (API) | **11,306** | 2026-03-16 05:21 UTC |
 
 ---
 ## 🔗 OPNsense Alias URL
@@ -25,9 +25,9 @@ https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/active_blacklist
 ```
 
 ---
-## 🔍 Feed Health: ✅ 98 OK | ⚠️ 3 leer | ❌ 1 Fehler
+## 🔍 Feed Health: ✅ 97 OK | ⚠️ 4 leer | ❌ 1 Fehler
 
-*Letzter Check: 2026-03-15 19:53 UTC – Details: [feed_health_report.md](feed_health_report.md)*
+*Letzter Check: 2026-03-16 03:51 UTC – Details: [feed_health_report.md](feed_health_report.md)*
 
 ---
 ## ⚙️ Workflow Health
@@ -35,4 +35,4 @@ https://raw.githubusercontent.com/juergen2025sys/NETSHIELD/main/active_blacklist
 *Details: [workflow_health_report.md](workflow_health_report.md)*
 
 ---
-*Automatisch generiert von NETSHIELD Report Generator · 2026-03-16 02:52 UTC*
+*Automatisch generiert von NETSHIELD Report Generator · 2026-03-16 05:21 UTC*
