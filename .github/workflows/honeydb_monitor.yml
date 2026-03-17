@@ -133,7 +133,8 @@ jobs:
           # ── 2) Bad Hosts nach Dienst ──────────────────────────────────────
           # Jeder Dienst = 1 API-Request. Bei 1500/Monat und täglichem Lauf
           # (30 Tage) bleiben 1500/30 = 50 Requests/Tag verfügbar.
-          # 4 Dienste + 1 allgemein + 1 Sensor-Count = 6 Requests/Tag → sicher.
+          # 1 (bad-hosts-all) + 4 Dienste + 1 sensor-count + bis zu 5 sensor-pages + 1 services
+          # = max. 12 Requests/Tag → gut innerhalb des Limits.
           SERVICES = ["SSH", "HTTP", "TELNET", "FTP"]
           print(f"\n[2/5] Bad Hosts nach Dienst ({', '.join(SERVICES)})...")
           service_stats = {}
@@ -186,7 +187,7 @@ jobs:
                   sensor_total += len(events)
                   print(f"  Page {page+1}: {len(events)} Events, from_id={next_from_id}")
                   page += 1
-                  if next_from_id is None or (next_from_id == 0 and page > 0):
+                  if next_from_id is None or next_from_id == 0:
                       break  # Keine weiteren Seiten
                   from_id = next_from_id
           else:

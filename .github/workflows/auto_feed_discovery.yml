@@ -581,7 +581,10 @@ jobs:
                           expired.append(ip)
                           del db[ip]
               except Exception:
-                  pass
+                  # Einträge mit defektem Datum entfernen (analog zu update_combined_blacklist)
+                  expired.append(ip)
+                  if ip in db:
+                      del db[ip]
 
           print(f"\nseen_db: +{ingested_seen} bestätigt | +{ingested_new} neu eingetragen | "
                 f"{len(expired)} abgelaufen | Gesamt: {len(db)} IPs")

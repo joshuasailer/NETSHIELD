@@ -213,7 +213,8 @@ jobs:
                           # Spalten aufteilen und dritte (Index 3) ersetzen
                           cols = line.split("|")
                           # cols[0]=leer, cols[1]=Datei, cols[2]=Beschreibung, cols[3]=Einträge
-                          if len(cols) >= 5:
+                          # Mindestens 5 Felder nötig; cols[3] darf nicht die letzte Spalte sein
+                          if len(cols) >= 5 and cols[3].strip().replace("*", "").replace(",", "").replace(" ", "").isdigit():
                               cols[3] = f" {formatted} "
                               line = "|".join(cols)
                               replaced = True
