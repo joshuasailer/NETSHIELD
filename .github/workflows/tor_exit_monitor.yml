@@ -82,6 +82,12 @@ jobs:
           removed_ips = existing - all_ips
           final_ips   = sorted(all_ips, key=lambda ip: tuple(int(o) for o in ip.split(".")))
 
+          # ── Leerungsschutz ────────────────────────────────────────────────
+          MIN_ENTRIES = 500
+          if len(final_ips) < MIN_ENTRIES:
+              print(f"WARNUNG: Nur {len(final_ips)} Tor-Exit-Nodes (< {MIN_ENTRIES}) – behalte bestehende Datei")
+              import sys; sys.exit(0)
+
           with open(TOR_FILE, "w", encoding="utf-8") as f:
               f.write(f"# NETSHIELD Tor Exit Node Blocklist\n")
               f.write(f"# Aktualisiert: {now_str}\n")
@@ -110,6 +116,21 @@ jobs:
             echo "Keine Änderungen"
           else
             git commit -m "Tor Exit Node Monitor: $(date -u '+%Y-%m-%d %H:%M') UTC"
-            git pull --rebase origin ${GITHUB_REF_NAME}
-            git push origin HEAD:${GITHUB_REF_NAME}
+            for attempt in 1 2 3 4 5; do
+              echo "Push-Versuch $attempt..."
+              git fetch origin ${GITHUB_REF_NAME}
+              if git rebase -X ours origin/${GITHUB_REF_NAME}; then
+                if git push origin HEAD:${GITHUB_REF_NAME}; then
+                  echo "Push erfolgreich (Versuch $attempt)"
+                  exit 0
+                fi
+              else
+                git checkout --ours tor_exit_nodes.txt tor_exit_report.md 2>/dev/null || true
+                git add tor_exit_nodes.txt tor_exit_report.md 2>/dev/null || true
+                GIT_EDITOR=true git rebase --continue 2>/dev/null || git rebase --skip
+              fi
+              sleep $((attempt * 3))
+            done
+            echo "FEHLER: Push nach 5 Versuchen fehlgeschlagen"
+            exit 1
           fi
