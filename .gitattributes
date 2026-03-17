@@ -1,5 +1,0 @@
-firewall_exports/blacklist.csv filter=lfs diff=lfs merge=lfs -text
-firewall_exports/blacklist_iptables.sh filter=lfs diff=lfs merge=lfs -text
-firewall_exports/blacklist_mikrotik.rsc filter=lfs diff=lfs merge=lfs -text
-firewall_exports/blacklist_cisco_acl.txt filter=lfs diff=lfs merge=lfs -text
-firewall_exports/blacklist_pfsense_opnsense.xml filter=lfs diff=lfs merge=lfs -text
