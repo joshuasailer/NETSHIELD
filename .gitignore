@@ -1,3 +1,7 @@
-threat_db.json
-discovered_feeds.json
-ip_ai_model.joblib
+# Lokale Testdateien
+*.pyc
+__pycache__/
+
+# Temporäre Outputs
+*.tmp
+*.bak
