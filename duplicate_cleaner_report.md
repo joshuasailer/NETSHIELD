@@ -1,33 +1,31 @@
 # Duplicate Cleaner – Report
-**Aktualisiert:** 2026-03-18 06:38 UTC
+**Aktualisiert:** 2026-03-18 19:32 UTC
 
 ---
-## Dateigrößen
+## Ergebnis
 
-| Datei | IPs |
-|---|---|
-| ✅ `combined_threat_blacklist_ipv4.txt` | 3,956,086 |
-| ✅ `cve_exploit_ips.txt` | 230,581 |
-| ✅ `honeypot_ips.txt` | 11,193 |
-| ✅ `honeydb_ips.txt` | 12,311 |
-| ✅ `bot_detector_blacklist_ipv4.txt` | 17,954 |
-
----
-## Überschneidungen mit combined_threat_blacklist
-
-> Alle Sub-Listen (cve/honeypot/honeydb/botdet) sind LOCAL_FEEDS –
-
-> combined liest sie direkt ein, daher keine Bereinigung nötig.
-
-| Sub-Liste | Gemeinsame IPs | Anteil | Aktion |
-|---|---|---|---|
-| `cve_exploit_ips.txt` | 230,507 | 100.0% | ⏭️ übersprungen (LOCAL_FEED) |
-| `honeypot_ips.txt` | 11,182 | 99.9% | ⏭️ übersprungen (LOCAL_FEED) |
-| `honeydb_ips.txt` | 11,188 | 90.9% | ⏭️ übersprungen (LOCAL_FEED) |
-| `bot_detector_blacklist_ipv4.txt` | 2,489 | 13.9% | ⏭️ übersprungen (LOCAL_FEED) |
+| Datei | Vorher | Nachher | Intern | Cross-list | Aktion |
+|---|---|---|---|---|---|
+| ✅ `combined_threat_blacklist_ipv4.txt` | 3,970,399 | 3,970,399 | 0 | 0 | ✅ sauber |
+| ✅ `cve_exploit_ips.txt` | 230,581 | 230,581 | 0 | 0 | ⏭️ cross-list übersprungen |
+| ✅ `honeypot_ips.txt` | 11,193 | 0 | 0 | 11,193 | 🗑️ 11193 entfernt |
+| ✅ `honeydb_ips.txt` | 12,311 | 0 | 0 | 12,311 | 🗑️ 12311 entfernt |
+| ✅ `bot_detector_blacklist_ipv4.txt` | 17,950 | 15,458 | 0 | 2,492 | 🗑️ 2492 entfernt |
 
 ---
-## Sub-Listen Überschneidungen (nur Info)
+## Cross-list Überschneidungen mit combined
+
+> `cve_exploit_ips.txt` wird nicht cross-bereinigt – ist eigenständige Feed-Quelle.
+
+| Sub-Liste | Überschneidung | Anteil |
+|---|---|---|
+| `cve_exploit_ips.txt` | 230,581 | 100.0% |
+| `honeypot_ips.txt` | 11,193 | 100.0% |
+| `honeydb_ips.txt` | 12,311 | 100.0% |
+| `bot_detector_blacklist_ipv4.txt` | 2,492 | 13.9% |
+
+---
+## Sub-Listen untereinander (nur Info)
 
 | Paar | Gemeinsame IPs |
 |---|---|
@@ -38,15 +36,15 @@
 | `honeypot∩botdet` | 24 |
 | `honeydb∩botdet` | 18 |
 
-*Sub-Listen-Duplikate werden nicht entfernt – combined dedupliziert automatisch.*
-
 ---
 ## Zusammenfassung
 
 | Metrik | Wert |
 |---|---|
-| Duplikate entfernt | **0** |
-| Combined Blacklist (unverändert) | **3,956,086** |
+| Interne Duplikate entfernt | **0** |
+| Cross-list Duplikate entfernt | **25,996** |
+| Gesamt entfernt | **25,996** |
+| Combined (nach Bereinigung) | **3,970,399** |
 
 ---
-*Generiert: 2026-03-18 06:38 UTC*
+*Generiert: 2026-03-18 19:32 UTC*
