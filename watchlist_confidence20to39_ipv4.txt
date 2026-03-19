@@ -1,5 +1,5 @@
 # NETSHIELD Watchlist – Mittlere Konfidenz (Score 25-49/100)
-# Aktualisiert: 2026-03-19 07:31 UTC
+# Aktualisiert: 2026-03-19 10:06 UTC
 # Eintraege: 13568
 
 1.1.253.134
