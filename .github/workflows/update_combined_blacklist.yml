@@ -712,10 +712,19 @@ jobs:
                       "days_seen":      1 if strongly_confirmed_today else 0,
                   }
 
-          # Aufnahme-Filter: mindestens 2 verschiedene Feeds (gesamt) oder HQ
+          # Aufnahme-Filter: mindestens 2 verschiedene Feeds (gesamt) oder HQ.
+          # AUSNAHME: Community-Reports (feeds=['community_report']) werden NICHT
+          # sofort gelöscht – sie leben bis zum Watchlist-Expiry (30 Tage nach first).
+          # Hintergrund: auto_feed_discovery hatte denselben Bug (dort als FIX Bug2
+          # behoben). Community-IPs haben nur 1 Feed-Eintrag ('community_report') und
+          # hq=False solange community_count < 3 → würden ohne diese Ausnahme beim
+          # nächsten Run sofort gelöscht, obwohl der Issue-Kommentar 'Added to Watchlist'
+          # verspricht.
           current_valid = {
               ip for ip, data in db.items()
-              if len(data.get("feeds", [])) >= 2 or data.get("hq")
+              if len(data.get("feeds", [])) >= 2
+              or data.get("hq")
+              or "community_report" in data.get("feeds", [])
           }
           for ip in list(db.keys()):
               if ip not in current_valid:

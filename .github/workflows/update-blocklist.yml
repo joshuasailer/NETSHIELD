@@ -373,6 +373,16 @@ jobs:
 
               time.sleep(0.1)
 
+          # ── Leerungsschutz ────────────────────────────────────────────────
+          # Wenn hackinggate.com komplett ausfällt landen alle Länder in errors
+          # und all_ips bleibt leer. Ohne diesen Check würden all_countries_ipv4.txt
+          # und continents/*.txt mit 0 Einträgen überschrieben.
+          MIN_ENTRIES = 100_000  # realistisch: ~3.5M Einträge erwartet
+          if len(all_ips) < MIN_ENTRIES:
+              print(f"WARNUNG: Nur {len(all_ips)} IP-Ranges geladen (< {MIN_ENTRIES}) – "
+                    f"Leerungsschutz aktiv, Dateien werden NICHT überschrieben.")
+              import sys; sys.exit(0)
+
           # ── 1) all_countries_ipv4.txt ────────────────────────────────────
           sorted_all = sorted(all_ips, key=sort_key)
           with open("all_countries_ipv4.txt", "w", encoding="utf-8") as f:
