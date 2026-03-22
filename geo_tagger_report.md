@@ -1,9 +1,9 @@
 # Geo-Tagger – Blacklist Enrichment Report
-**Aktualisiert:** 2026-03-15 07:33 UTC  
+**Aktualisiert:** 2026-03-22 07:27 UTC  
 **Methode:** ScaniteX Länderprefixe (kein API-Key, kein Rate-Limit)  
-**Blacklist-IPs gesamt:** 3,217,257  
-**Davon zugeordnet:** 2,566,515 (79.8%)  
-**Nicht zugeordnet:** 650,742
+**Blacklist-IPs gesamt:** 3,661,257  
+**Davon zugeordnet:** 2,943,052 (80.4%)  
+**Nicht zugeordnet:** 718,205
 
 ---
 
@@ -11,31 +11,31 @@
 
 | Rang | Land | Code | Risiko | BL-Hits | Anteil | Prefixes |
 |---|---|---|---|---|---|---|
-| 1 | 🇺🇸 USA | `US` | ⚪ Niedrig | 1,298,971 | 40.4% | 69507 |
-| 2 | 🇨🇳 China | `CN` | 🔴 Hoch | 241,142 | 7.5% | 8803 |
-| 3 | 🇷🇺 Russland | `RU` | 🔴 Hoch | 174,855 | 5.4% | 11256 |
-| 4 | 🇬🇧 Grossbritannien | `GB` | ⚪ Niedrig | 131,539 | 4.1% | 9262 |
-| 5 | 🇩🇪 Deutschland | `DE` | ⚪ Niedrig | 92,019 | 2.9% | 10969 |
-| 6 | 🇸🇬 Singapur | `SG` | ⚪ Niedrig | 91,454 | 2.8% | 1858 |
-| 7 | 🇺🇦 Ukraine | `UA` | 🟡 Mittel | 71,938 | 2.2% | 2887 |
-| 8 | 🇭🇰 Hongkong | `HK` | 🟡 Mittel | 70,840 | 2.2% | 3295 |
-| 9 | 🇮🇳 Indien | `IN` | 🟡 Mittel | 62,503 | 1.9% | 9140 |
-| 10 | 🇫🇷 Frankreich | `FR` | ⚪ Niedrig | 47,827 | 1.5% | 4684 |
-| 11 | 🇳🇱 Niederlande | `NL` | ⚪ Niedrig | 39,389 | 1.2% | 6330 |
-| 12 | 🇮🇩 Indonesien | `ID` | 🟡 Mittel | 36,381 | 1.1% | 6037 |
-| 13 | 🇧🇷 Brasilien | `BR` | 🟡 Mittel | 35,267 | 1.1% | 12804 |
-| 14 | 🇻🇳 Vietnam | `VN` | 🟡 Mittel | 33,771 | 1.0% | 1646 |
-| 15 | 🇮🇷 Iran | `IR` | 🔴 Hoch | 25,303 | 0.8% | 1920 |
-| 16 | 🇰🇷 Südkorea | `KR` | ⚪ Niedrig | 17,608 | 0.5% | 2422 |
-| 17 | 🇳🇬 Nigeria | `NG` | 🟡 Mittel | 15,811 | 0.5% | 398 |
-| 18 | 🇹🇷 Türkei | `TR` | 🟡 Mittel | 15,170 | 0.5% | 1951 |
-| 19 | 🇵🇰 Pakistan | `PK` | 🟡 Mittel | 14,602 | 0.5% | 772 |
-| 20 | 🇷🇴 Rumänien | `RO` | 🟡 Mittel | 13,968 | 0.4% | 2853 |
-| 21 | 🇧🇩 Bangladesch | `BD` | 🟡 Mittel | 13,922 | 0.4% | 2288 |
-| 22 | 🇯🇵 Japan | `JP` | ⚪ Niedrig | 12,764 | 0.4% | 4731 |
-| 23 | 🇰🇿 Kasachstan | `KZ` | 🟡 Mittel | 5,724 | 0.2% | 647 |
-| 24 | 🇧🇾 Belarus | `BY` | 🔴 Hoch | 3,556 | 0.1% | 106 |
-| 25 | 🇸🇾 Syrien | `SY` | 🔴 Hoch | 189 | 0.0% | 213 |
+| 1 | 🇺🇸 USA | `US` | ⚪ Niedrig | 1,339,980 | 36.6% | 69561 |
+| 2 | 🇨🇳 China | `CN` | 🔴 Hoch | 425,855 | 11.6% | 8803 |
+| 3 | 🇷🇺 Russland | `RU` | 🔴 Hoch | 243,202 | 6.6% | 11270 |
+| 4 | 🇬🇧 Grossbritannien | `GB` | ⚪ Niedrig | 134,624 | 3.7% | 9263 |
+| 5 | 🇩🇪 Deutschland | `DE` | ⚪ Niedrig | 105,191 | 2.9% | 10976 |
+| 6 | 🇮🇳 Indien | `IN` | 🟡 Mittel | 98,470 | 2.7% | 9166 |
+| 7 | 🇸🇬 Singapur | `SG` | ⚪ Niedrig | 74,897 | 2.0% | 1861 |
+| 8 | 🇺🇦 Ukraine | `UA` | 🟡 Mittel | 72,603 | 2.0% | 2888 |
+| 9 | 🇫🇷 Frankreich | `FR` | ⚪ Niedrig | 51,032 | 1.4% | 4684 |
+| 10 | 🇻🇳 Vietnam | `VN` | 🟡 Mittel | 49,650 | 1.4% | 1647 |
+| 11 | 🇳🇱 Niederlande | `NL` | ⚪ Niedrig | 45,492 | 1.2% | 6339 |
+| 12 | 🇭🇰 Hongkong | `HK` | 🟡 Mittel | 43,446 | 1.2% | 3295 |
+| 13 | 🇧🇷 Brasilien | `BR` | 🟡 Mittel | 41,718 | 1.1% | 12814 |
+| 14 | 🇮🇩 Indonesien | `ID` | 🟡 Mittel | 37,817 | 1.0% | 6041 |
+| 15 | 🇰🇷 Südkorea | `KR` | ⚪ Niedrig | 34,033 | 0.9% | 2422 |
+| 16 | 🇮🇷 Iran | `IR` | 🔴 Hoch | 30,627 | 0.8% | 1920 |
+| 17 | 🇹🇷 Türkei | `TR` | 🟡 Mittel | 19,253 | 0.5% | 1954 |
+| 18 | 🇯🇵 Japan | `JP` | ⚪ Niedrig | 18,084 | 0.5% | 4732 |
+| 19 | 🇵🇰 Pakistan | `PK` | 🟡 Mittel | 17,498 | 0.5% | 774 |
+| 20 | 🇳🇬 Nigeria | `NG` | 🟡 Mittel | 16,639 | 0.5% | 398 |
+| 21 | 🇷🇴 Rumänien | `RO` | 🟡 Mittel | 16,120 | 0.4% | 2837 |
+| 22 | 🇧🇩 Bangladesch | `BD` | 🟡 Mittel | 15,891 | 0.4% | 2290 |
+| 23 | 🇰🇿 Kasachstan | `KZ` | 🟡 Mittel | 6,648 | 0.2% | 647 |
+| 24 | 🇧🇾 Belarus | `BY` | 🔴 Hoch | 3,964 | 0.1% | 106 |
+| 25 | 🇸🇾 Syrien | `SY` | 🔴 Hoch | 316 | 0.0% | 213 |
 | 26 | 🇰🇵 Nordkorea | `KP` | 🔴 Hoch | 2 | 0.0% | 1 |
 
 ---
@@ -44,11 +44,11 @@
 
 | Risikoklasse | BL-Hits | Anteil |
 |---|---|---|
-| 🔴 Hoch (RU/CN/KP/IR/SY/BY) | 445,047 | 13.8% |
-| 🟡 Mittel | 389,897 | 12.1% |
-| ⚪ Niedrig / Tracking | 1,731,571 | 53.8% |
-| ❓ Nicht zugeordnet | 650,742 | 20.2% |
+| 🔴 Hoch (RU/CN/KP/IR/SY/BY) | 703,966 | 19.2% |
+| 🟡 Mittel | 435,753 | 11.9% |
+| ⚪ Niedrig / Tracking | 1,803,333 | 49.3% |
+| ❓ Nicht zugeordnet | 718,205 | 19.6% |
 
 ---
 *Datenquelle: [ScaniteX IP Ranges](https://scanitex.com/en/resources/ip-ranges) (täglich aktualisiert)*  
-*Generiert: 2026-03-15 07:33 UTC*
+*Generiert: 2026-03-22 07:27 UTC*
