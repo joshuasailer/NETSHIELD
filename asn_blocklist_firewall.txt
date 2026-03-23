@@ -1,24 +1,24 @@
 # ASN Reputation Blocklist – NETSHIELD
-# Aktualisiert: 2026-03-22 04:25 UTC
+# Aktualisiert: 2026-03-23 04:34 UTC
 # Format: AS<Nummer> # Score | BL-Hits | Organisation | Land
 # Nur ASNs mit Score >= 50 (base_score + BL-Treffer + DROP/ET-Bonus)
 
-AS14061  # Score:110 | BL-Hits:207890 | DigitalOcean | US
-AS132203  # Score:104 | BL-Hits:22750 | Tencent Cloud | CN
-AS51167  # Score:103 | BL-Hits:11891 | Contabo | DE
-AS12389  # Score:100 | BL-Hits:52917 | Rostelecom | RU
-AS45102  # Score:95 | BL-Hits:32098 | Alibaba Cloud | CN
-AS20473  # Score:95 | BL-Hits:17364 | Vultr | US
-AS22612  # Score:90 | BL-Hits:1616 | Namecheap | US
-AS31898  # Score:85 | BL-Hits:24873 | Oracle Cloud | US
-AS16509  # Score:85 | BL-Hits:292488 | Amazon AWS | US
-AS16276  # Score:84 | BL-Hits:38620 | OVH | FR
-AS24940  # Score:81 | BL-Hits:22766 | Hetzner | DE
-AS12876  # Score:80 | BL-Hits:8245 | Scaleway | FR
-AS47583  # Score:78 | BL-Hits:2821 | Hostinger | LT
-AS63949  # Score:75 | BL-Hits:10476 | Linode (Akamai) | US
-AS8560  # Score:74 | BL-Hits:3190 | IONOS | DE
-AS26496  # Score:65 | BL-Hits:1946 | GoDaddy | US
-AS8075  # Score:61 | BL-Hits:36780 | Microsoft Azure | US
+AS14061  # Score:110 | BL-Hits:208999 | DigitalOcean | US
+AS132203  # Score:104 | BL-Hits:22755 | Tencent Cloud | CN
+AS51167  # Score:103 | BL-Hits:11932 | Contabo | DE
+AS12389  # Score:100 | BL-Hits:53004 | Rostelecom | RU
+AS45102  # Score:95 | BL-Hits:32142 | Alibaba Cloud | CN
+AS20473  # Score:95 | BL-Hits:17408 | Vultr | US
+AS22612  # Score:90 | BL-Hits:1615 | Namecheap | US
+AS31898  # Score:85 | BL-Hits:24918 | Oracle Cloud | US
+AS16509  # Score:85 | BL-Hits:293072 | Amazon AWS | US
+AS16276  # Score:84 | BL-Hits:38667 | OVH | FR
+AS24940  # Score:81 | BL-Hits:22826 | Hetzner | DE
+AS12876  # Score:80 | BL-Hits:8246 | Scaleway | FR
+AS47583  # Score:78 | BL-Hits:2825 | Hostinger | LT
+AS63949  # Score:75 | BL-Hits:10564 | Linode (Akamai) | US
+AS8560  # Score:74 | BL-Hits:3205 | IONOS | DE
+AS26496  # Score:65 | BL-Hits:1944 | GoDaddy | US
+AS8075  # Score:61 | BL-Hits:36813 | Microsoft Azure | US
 AS46606  # Score:60 | BL-Hits:909 | Bluehost (Unified Layer) | US
-AS36351  # Score:50 | BL-Hits:1202 | IBM Cloud | US
+AS36351  # Score:50 | BL-Hits:1201 | IBM Cloud | US
