@@ -64,7 +64,9 @@ jobs:
               # Auch wenn is_valid_public_ipv4() private IPs herausfiltert,
               # dienen diese Einträge als zusätzliche Sicherheitsebene.
               "192.168.13.1",        # LAN Gateway / lokaler DNS-Server
-              "192.168.13.0/24",     # gesamtes LAN-Subnetz (Klasse C)
+              "192.168.13.0/24",     # bisheriges LAN-Subnetz
+              "192.168.14.1",        # OPNsense / lokaler DNS-Server
+              "192.168.14.0/24",     # aktuelles LAN-Subnetz
               "10.0.0.0/8",          # RFC 1918 Class A
               "172.16.0.0/12",       # RFC 1918 Class B
               "192.168.0.0/16",      # RFC 1918 Class C (alle privaten 192.168.x.x)

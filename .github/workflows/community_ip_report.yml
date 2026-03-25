@@ -107,8 +107,13 @@ jobs:
           }
 
           PROTECTED_CIDRS = [
-              "8.8.8.0/24","1.1.1.0/24","104.16.0.0/13",
-              "13.64.0.0/11","34.0.0.0/9",
+              # RFC1918 / lokales Netz – darf nie gemeldet oder geblockt werden
+              "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",
+              # häufige lokale Gateways / DNS-IPs zusätzlich explizit geschützt
+              "192.168.13.1/32", "192.168.14.1/32",
+              # öffentliche Infrastruktur die oft False-Positives erzeugt
+              "8.8.8.0/24", "1.1.1.0/24", "104.16.0.0/13",
+              "13.64.0.0/11", "34.0.0.0/9",
           ]
 
           def is_valid_public_ipv4(ip_str):
