@@ -144,8 +144,9 @@ jobs:
           # ══════════════════════════════════════════════════════════════════
           # KONFIDENZ-MODELL
           #
-          # confidence40 = qualitativ beste Liste, wenig False Positives
-          # watchlist    = neue/unsichere Bedrohungen, höheres FP-Risiko
+          # blacklist_confidence40 = mittleres bis hohes Vertrauen (≥40 Punkte)
+          #   Mehr IPs als active_blacklist, geeignet für zusätzliche Filterregeln.
+          # watchlist              = neue/unsichere Bedrohungen (25–39 Punkte)
           #
           # Score setzt sich aus 4 unabhängigen Dimensionen zusammen:
           #
@@ -188,10 +189,12 @@ jobs:
           #
           # Gesamt max. 100 Punkte.
           # Schwellwerte:
-          #   conf >= 50 → blacklist_confidence40 (umbenannt zu _confidence50 wäre
-          #                besser, aber Dateiname bleibt für Kompatibilität)
-          #   conf 25–49 → watchlist
+          #   conf >= 40 → blacklist_confidence40 (mittleres/hohes Vertrauen)
+          #   conf 25–39 → watchlist
           #   conf < 25  → ignoriert
+          #
+          # Hinweis: active_blacklist_ipv4.txt (OPNsense) verwendet conf >= 65
+          # und ist damit deutlich restriktiver (nur echte HQ-Bedrohungen).
           # ══════════════════════════════════════════════════════════════════
 
           confidence40 = []
@@ -283,7 +286,7 @@ jobs:
 
               conf = min(score_a + score_b + score_c + score_d, 100)
 
-              if conf >= 50 and not is_protected_entry(ip):
+              if conf >= 40 and not is_protected_entry(ip):
                   confidence40.append((ip, conf))
               elif conf >= 25 and not is_protected_entry(ip):
                   confidence20.append((ip, conf))
@@ -291,13 +294,13 @@ jobs:
           confidence40.sort(key=lambda x: (-x[1], x[0]))
           confidence20.sort(key=lambda x: (-x[1], x[0]))
 
-          print(f"Konfidenz ≥50 (→ confidence40-Datei): {len(confidence40)} IPs")
-          print(f"Konfidenz 25-49 (→ watchlist):         {len(confidence20)} IPs")
+          print(f"Konfidenz ≥40 (→ confidence40-Datei): {len(confidence40)} IPs")
+          print(f"Konfidenz 25-39 (→ watchlist):         {len(confidence20)} IPs")
           print(f"Watchlist (kein HQ, last=2000-01-01):  {skipped_watchlist} IPs (Score zu niedrig, ausstehend)")
           print(f"Übersprungen:                          {skipped} IPs (Datumsfehler)")
 
           with open(OUT_40, "w", encoding="utf-8") as f:
-              f.write(f"# NETSHIELD Blacklist – Hohe Konfidenz (Score ≥50/100)\n")
+              f.write(f"# NETSHIELD Blacklist – Mittleres/Hohes Vertrauen (Score ≥40/100)\n")
               f.write(f"# Aktualisiert: {now_str}\n")
               f.write(f"# Scoring: Quellen-Qualität(40) + Aktualität(30) + Persistenz(20) + Alter(10)\n")
               f.write(f"# Eintraege: {len(confidence40)}\n\n")
@@ -305,13 +308,13 @@ jobs:
                   f.write(f"{ip}\n")
 
           with open(OUT_WATCH, "w", encoding="utf-8") as f:
-              f.write(f"# NETSHIELD Watchlist – Mittlere Konfidenz (Score 25-49/100)\n")
+              f.write(f"# NETSHIELD Watchlist – Niedriges Vertrauen (Score 25-39/100)\n")
               f.write(f"# Aktualisiert: {now_str}\n")
               f.write(f"# Eintraege: {len(confidence20)}\n\n")
               for ip, conf in confidence20:
                   f.write(f"{ip}\n")
 
-          print(f"Fertig: {len(confidence40)} IPs (conf40) | {len(confidence20)} IPs (watchlist)")
+          print(f"Fertig: {len(confidence40)} IPs (conf≥40) | {len(confidence20)} IPs (watchlist 25-39)")
           EOF
 
       - name: Commit
