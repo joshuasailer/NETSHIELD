@@ -894,7 +894,7 @@ jobs:
 
               conf = min(score_a + score_b + score_c + score_d, 100)
 
-              if conf >= 50:
+              if conf >= 65:
                   active_ips.append(ip)
               else:
                   active_skipped_score += 1
@@ -904,9 +904,9 @@ jobs:
           with open("active_blacklist_ipv4.txt", "w", encoding="utf-8") as f:
               f.write("# NETSHIELD Active Blacklist (IPv4) – Stufe 2\n")
               f.write(f"# Aktualisiert: {now_stamp}\n")
-              f.write(f"# Kriterien: last_seen <= 30 Tage UND Confidence-Score >= 50/100\n")
+              f.write(f"# Kriterien: last_seen <= 30 Tage UND Confidence-Score >= 65/100\n")
               f.write(f"# Eintraege: {len(active_ips)}\n")
-              f.write(f"# Herausgefiltert (Score < 50): {active_skipped_score}\n\n")
+              f.write(f"# Herausgefiltert (Score < 65): {active_skipped_score}\n\n")
               f.write("\n".join(active_ips) + "\n")
 
           # ── Report ─────────────────────────────────────────────────────────
@@ -915,7 +915,7 @@ jobs:
               f.write(f"- Aktualisiert: **{now_stamp}**\n")
               f.write(f"- Feeds gesamt: **{len(SOURCES)}**\n")
               f.write(f"- Stufe 1 (combined): **{len(sorted_ips)}** IPs\n")
-              f.write(f"- Stufe 2 (active, 30T + Conf≥50): **{len(active_ips)}** IPs (herausgefiltert: {active_skipped_score})\n")
+              f.write(f"- Stufe 2 (active, 30T + Conf≥65): **{len(active_ips)}** IPs (herausgefiltert: {active_skipped_score})\n")
               f.write(f"- Abgelaufen & entfernt: **{len(expired)}**\n\n")
               f.write("## Feed-Statistik\n\n| Feed | IPs |\n|---|---:|\n")
               for name, count in feed_stats:
