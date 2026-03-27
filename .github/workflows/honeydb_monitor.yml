@@ -223,7 +223,7 @@ jobs:
 
           new_ips     = all_ips - existing
           removed_ips = existing - all_ips
-          final_ips   = sorted(all_ips, key=lambda ip: tuple(int(o) for o in ip.split(".")))
+          final_ips   = sorted(all_ips, key=lambda ip: (tuple(int(o) for o in ip.split('/')[0].split('.')), ip))
 
           # ── Leerungsschutz ────────────────────────────────────────────────
           MIN_ENTRIES = 100

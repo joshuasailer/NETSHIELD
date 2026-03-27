@@ -90,6 +90,8 @@ jobs:
               # Google Services
               "172.217.16.196", "172.217.16.206", "172.217.20.132", "172.217.16.195",
               "142.251.127.190", "142.251.208.164",
+              "142.251.155.119", "142.251.151.119", "142.251.127.84",  # OPNsense Freigabeliste
+              "142.251.157.119", "142.251.14.105",                     # OPNsense Freigabeliste
               # Hurricane Electric
               "184.105.99.75",
               # Shopify
@@ -102,6 +104,8 @@ jobs:
               "104.18.32.47", "172.64.155.209",
               # GitHub
               "140.82.112.0/20",
+              # ICANN / Verisign (WordPress.com Nameserver)
+              "192.0.66.111", "192.0.66.218",
               # Quad9 DNS (alle IPv4-Adressen, alle Dienstvarianten)
               "9.9.9.9", "149.112.112.112",    # Secure (mit Malware-Blocking)
               "9.9.9.10", "149.112.112.10",    # Unsecured (ohne Blocking)
