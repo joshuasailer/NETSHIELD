@@ -97,9 +97,12 @@ jobs:
                 f"Ungültig/privat: {len(invalid_ips)} | Duplikate: {len(valid_ips) - len(unique_ips)}")
 
           # ── Leerungsschutz ────────────────────────────────────────────────
+          # FIX LS4: sys.exit(1) statt sys.exit(0) + GitHub Warning Annotation.
           if len(unique_ips) < MIN_ENTRIES:
-              print(f"WARNUNG: Nur {len(unique_ips)} IPs (< {MIN_ENTRIES}) – behalte bestehende Datei")
-              sys.exit(0)
+              msg = f"Nur {len(unique_ips)} IPs (< {MIN_ENTRIES}) – behalte bestehende Datei"
+              print(f"::warning file=update_bot_detector.yml::{msg}")
+              print(f"WARNUNG: {msg}")
+              sys.exit(1)
 
           # ── Delta berechnen ───────────────────────────────────────────────
           import os

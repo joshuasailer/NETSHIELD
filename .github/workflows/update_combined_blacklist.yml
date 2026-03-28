@@ -110,11 +110,17 @@ jobs:
           sorted_ips = sorted(all_ips, key=lambda e: (tuple(int(x) for x in e.split('/')[0].split('.')), e))
 
           # ── FIX #6: Leerungsschutz für AbuseIPDB-Ausgabe ──────────────────
+          # FIX LS1: sys.exit(1) statt sys.exit(0) damit GitHub Actions den Step
+          # als fehlgeschlagen markiert und im UI sichtbar wird.
+          # Zusätzlich: GitHub Workflow Warning Annotation ausgeben.
+          import sys
           MIN_ABUSEIPDB = 100
           if len(sorted_ips) < MIN_ABUSEIPDB:
-              print(f"WARNUNG: Nur {len(sorted_ips)} AbuseIPDB-IPs (<{MIN_ABUSEIPDB}) – "
-                    f"behalte bestehende {OUT}")
-              import sys; sys.exit(0)
+              msg = (f"Nur {len(sorted_ips)} AbuseIPDB-IPs (<{MIN_ABUSEIPDB}) – "
+                     f"behalte bestehende {OUT}")
+              print(f"::warning file=update_combined_blacklist.yml::{msg}")
+              print(f"WARNUNG: {msg}")
+              sys.exit(1)
 
           with open(OUT, "w", encoding="utf-8") as f:
               f.write("# AbuseIPDB API Blacklist – NETSHIELD\n")
@@ -686,12 +692,32 @@ jobs:
               "honeydb_ips.txt":                 True,   # HoneyDB Community Honeypot Network (API)
               "abuseipdb_api_blacklist.txt":     True,   # AbuseIPDB API (Round-Robin, HQ)
           }
+          # FIX STALE1: Alters-Check für lokale Feed-Dateien.
+          # Sub-Workflows schreiben einen "# Aktualisiert: YYYY-MM-DD HH:MM UTC"-Header.
+          # Bei > 48h Alter (sub-workflow ausgefallen) GitHub Warning ausgeben.
+          _LOCAL_FEED_MAX_AGE_HOURS = 48
+          _ts_re = re.compile(r'#\s*Aktualisiert:\s*(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})\s*UTC')
           for local_file, is_hq_local in LOCAL_FEEDS.items():
               if not os.path.exists(local_file):
                   print(f"  SKIP (nicht vorhanden): {local_file}")
                   continue
               with open(local_file) as lf:
-                  local_ips = parse_feed_entries(lf.read())
+                  raw_local = lf.read()
+              # Alters-Check
+              _ts_m = _ts_re.search(raw_local)
+              if _ts_m:
+                  try:
+                      _file_dt = datetime.strptime(_ts_m.group(1), "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc)
+                      _age_h = (now - _file_dt).total_seconds() / 3600
+                      if _age_h > _LOCAL_FEED_MAX_AGE_HOURS:
+                          _stale_msg = (f"{local_file} ist {_age_h:.0f}h alt "
+                                        f"(letztes Update: {_ts_m.group(1)} UTC) – "
+                                        f"Sub-Workflow möglicherweise ausgefallen")
+                          print(f"::warning file=update_combined_blacklist.yml::{_stale_msg}")
+                          print(f"WARNUNG: {_stale_msg}")
+                  except Exception:
+                      pass
+              local_ips = parse_feed_entries(raw_local)
               for entry in local_ips:
                   if is_hq_local:
                       ip_in_hq.add(entry)

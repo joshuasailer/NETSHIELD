@@ -35,7 +35,10 @@ jobs:
         uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         with:
           path: seen_db.json
-          key: netshield-seen-db-v2-${{ github.run_id }}
+          # FIX RC1: Restore-Key liest den neuesten Combined-Cache (v2-Prefix).
+          # Der Save-Key verwendet den fp-Prefix damit FP-Checker Combined NICHT
+          # überschreibt – Combined ist immer die einzige Schreibquelle für v2.
+          key: netshield-seen-db-fp-${{ github.run_id }}
           restore-keys: |
             netshield-seen-db-v2-
             netshield-seen-db-v1-
@@ -59,6 +62,9 @@ jobs:
           WHITELIST_CIDRS = [
               "192.168.13.1", "192.168.14.1",
               "192.168.13.0/24", "192.168.14.0/24",
+              # FIX REDUND1: RFC-1918-Ranges werden von is_valid_public_ipv4() in combined
+              # bereits beim Einlesen gefiltert und können nie in der Blacklist landen.
+              # Einträge bleiben als zusätzliche Sicherheitsebene erhalten.
               "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",
               "185.111.111.154", "185.111.111.155", "185.111.111.156",
               "185.111.111.157", "185.111.111.158", "185.111.111.159",
@@ -298,7 +304,8 @@ jobs:
         uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         with:
           path: seen_db.json
-          key: netshield-seen-db-v2-${{ github.run_id }}
+          # FIX RC1: Eigener fp-Prefix – überschreibt Combined-Cache (v2) nicht.
+          key: netshield-seen-db-fp-${{ github.run_id }}
 
       - name: Commit
         run: |

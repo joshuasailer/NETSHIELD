@@ -226,13 +226,16 @@ jobs:
           final_ips   = sorted(all_ips, key=lambda ip: (tuple(int(o) for o in ip.split('/')[0].split('.')), ip))
 
           # ── Leerungsschutz ────────────────────────────────────────────────
-          # FIX #11: MIN_ENTRIES von 100 auf 300 erhöht.
-          # HoneyDB liefert normalerweise 500–5000 IPs. 100 war zu permissiv
-          # und hätte einen partiellen API-Ausfall durchgelassen.
-          MIN_ENTRIES = 300
+          # FIX #11 / FIX LS2: MIN_ENTRIES auf 500 erhöht (entspricht unterer Normalwert
+          # 500–5000 IPs). sys.exit(1) statt sys.exit(0) damit GitHub Actions den
+          # Step als fehlgeschlagen markiert und im UI sichtbar wird.
+          import sys
+          MIN_ENTRIES = 500
           if len(final_ips) < MIN_ENTRIES:
-              print(f"WARNUNG: Nur {len(final_ips)} HoneyDB-IPs (< {MIN_ENTRIES}) – behalte bestehende Datei")
-              import sys; sys.exit(0)
+              msg = f"Nur {len(final_ips)} HoneyDB-IPs (< {MIN_ENTRIES}) – behalte bestehende Datei"
+              print(f"::warning file=honeydb_monitor.yml::{msg}")
+              print(f"WARNUNG: {msg}")
+              sys.exit(1)
 
           with open(HONEYDB_FILE, "w", encoding="utf-8") as f:
               f.write(f"# NETSHIELD HoneyDB IP Blocklist\n")

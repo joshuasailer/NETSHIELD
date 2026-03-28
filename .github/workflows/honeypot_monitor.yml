@@ -160,10 +160,14 @@ jobs:
           final_ips   = sorted(all_ips, key=lambda e: (tuple(int(x) for x in e.split('/')[0].split('.')), e))
 
           # ── Leerungsschutz ────────────────────────────────────────────────
+          # FIX LS3: sys.exit(1) statt sys.exit(0) + GitHub Warning Annotation.
+          import sys
           MIN_ENTRIES = 500
           if len(final_ips) < MIN_ENTRIES:
-              print(f"WARNUNG: Nur {len(final_ips)} IPs (< {MIN_ENTRIES}) – behalte bestehende honeypot_ips.txt")
-              import sys; sys.exit(0)
+              msg = f"Nur {len(final_ips)} IPs (< {MIN_ENTRIES}) – behalte bestehende honeypot_ips.txt"
+              print(f"::warning file=honeypot_monitor.yml::{msg}")
+              print(f"WARNUNG: {msg}")
+              sys.exit(1)
 
           with open(HONEYPOT_FILE, "w", encoding="utf-8") as f:
               f.write(f"# NETSHIELD Honeypot IP Blocklist\n")

@@ -74,6 +74,28 @@ jobs:
                   exit(0)
           print(f"seen_db geladen: {len(db)} IPs")
 
+          # FIX AGE1: Cache-Alter prüfen – Score Decay läuft wöchentlich (So 07:00).
+          # Bei veraltetem Cache (> 24h seit letztem HQ-Eintrag) Warnung ausgeben,
+          # damit der Report nicht auf Basis einer wochealten seen_db erstellt wird.
+          real_dates = [d.get("last", "2000-01-01") for d in db.values()
+                        if d.get("last", "2000-01-01") != "2000-01-01"]
+          if real_dates:
+              newest_last = max(real_dates)
+              try:
+                  newest_dt = datetime.strptime(newest_last, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                  db_age_hours = (now - newest_dt).total_seconds() / 3600
+                  if db_age_hours > 24:
+                      age_msg = (f"seen_db ist {db_age_hours:.0f}h alt (letzter HQ-Eintrag: {newest_last}) "
+                                 f"– Score Decay analysiert möglicherweise veraltete Daten")
+                      print(f"::warning file=score_decay_monitor.yml::{age_msg}")
+                      print(f"WARNUNG: {age_msg}")
+                  else:
+                      print(f"seen_db Alter: {db_age_hours:.1f}h (OK)")
+              except Exception:
+                  pass
+          else:
+              print("seen_db: Keine HQ-bestätigten Einträge (nur Watchlist-IPs)")
+
           WARN_DAYS     = 30
           CRITICAL_DAYS = 45
           # DECAY_DAYS entfernt – Löschen aus combined/seen_db ist ausschließlich

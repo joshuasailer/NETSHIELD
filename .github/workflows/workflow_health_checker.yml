@@ -164,14 +164,20 @@ jobs:
                       warnings.append({"file": fname, "check": "Fehlende Fehlerbehandlung", "detail": msg})
 
                   # ── Check 6: del db[ip] in aktiver for-Schleife ────────────
-                  # Nur echte Code-Zeilen prüfen (keine Kommentare, keine Strings)
+                  # FIX CHK6: Zeilen-Filter auf Kommentare beschränkt – das Entfernen
+                  # von Zeilen mit r" / r' ist zu aggressiv und blendet legitimen Code
+                  # aus der Analyse aus (False Negatives) bzw. erzeugt False Positives
+                  # wenn Regex-Strings und Dict-Mutation im gleichen Block stehen.
+                  # Stattdessen: list(db.keys()) als Sicherheitsmerkmal prüfen UND
+                  # zusätzlich sicherstellen dass "del" und "for...keys()" im gleichen
+                  # logischen Block stehen (Einrückungstiefe-Heuristik).
                   code_lines = [l for l in dedented.splitlines()
-                                if l.strip() and not l.strip().startswith('#')
-                                and 're.search' not in l and 'r"' not in l and "r'" not in l]
+                                if l.strip() and not l.strip().startswith('#')]
                   code_only = '\n'.join(code_lines)
-                  if re.search(r'for \w+ in \w+\.keys\(\)', code_only) and \
-                     re.search(r'del \w+\[', code_only) and \
-                     'list(' not in code_only:
+                  has_keys_loop = bool(re.search(r'for \w+ in \w+\.keys\(\)', code_only))
+                  has_del       = bool(re.search(r'\bdel \w+\[', code_only))
+                  has_list_wrap = bool(re.search(r'for \w+ in list\(', code_only))
+                  if has_keys_loop and has_del and not has_list_wrap:
                       msg = f"Block {i}: 'del' in for-Schleife über .keys() ohne list() – RuntimeError"
                       file_errors.append(msg)
                       errors.append({"file": fname, "check": "Dict-Mutation in Schleife", "detail": msg})

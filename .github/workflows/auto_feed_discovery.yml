@@ -289,26 +289,27 @@ jobs:
               "intrusion-detection", "brute-force", "vulnerability-scanner",
           ]
 
+          # FIX API1: Queries ohne Body-Keyword entfernt – GitHub Code Search API
+          # gibt HTTP 422 zurück wenn nur ein filename:-Filter ohne Suchbegriff übergeben
+          # wird. Diese Queries verschwenden Rate-Limit-Budget (2s Pause je Query)
+          # und liefern keine verwertbaren Ergebnisse.
           SEARCH_CODE_QUERIES = [
               "filename:blacklist.txt malicious ip",
               "filename:blocklist.txt malicious ip",
               "filename:ips.txt malicious",
-              "filename:badips.txt",
-              "filename:bad-ips.txt",
-              "filename:malicious_ips.txt",
-              "filename:malicious-ips.txt",
-              "filename:suspicious_ips.txt",
-              "filename:attackers.txt",
-              "filename:botnet.txt",
-              "filename:c2.txt",
-              "filename:ioc.txt",
-              "filename:scanner.txt",
+              "filename:malicious_ips.txt ip",
+              "filename:malicious-ips.txt ip",
+              "filename:suspicious_ips.txt ip",
+              "filename:attackers.txt ip",
+              "filename:botnet.txt ip",
+              "filename:c2.txt ip",
+              "filename:ioc.txt ip",
+              "filename:scanner.txt ip",
               "filename:denylist.txt ipv4",
               "filename:banlist.txt ipv4",
-              # NEU: erweiterte Dateiname-Suche
-              "filename:c2-ips.txt",
-              "filename:malware-ips.txt",
-              "filename:blocklist.ipset",
+              "filename:c2-ips.txt ip",
+              "filename:malware-ips.txt ip",
+              "filename:blocklist.ipset ip",
               "filename:ransomware.txt ip",
               "filename:abuse.txt ip",
           ]
