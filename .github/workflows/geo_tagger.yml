@@ -195,7 +195,6 @@ jobs:
           # ── Leerungsschutz ────────────────────────────────────────────────
           # Wenn ScaniteX nicht erreichbar war und alle Länder-Requests fehlschlugen,
           # sind total_matched=0 und ip_to_country leer → keine Ausgabe schreiben.
-          import sys
           MIN_GEO_MATCHED = 100
           if total_matched < MIN_GEO_MATCHED:
               msg = (f"Nur {total_matched} Geo-Treffer (< {MIN_GEO_MATCHED}) – "
