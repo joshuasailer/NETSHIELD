@@ -1,5 +1,5 @@
 # NETSHIELD – Chad (TD) IPv4 Ranges
-# Aktualisiert: 2026-03-25 03:59 UTC
+# Aktualisiert: 2026-03-29 06:36 UTC
 # IP-Ranges: 20
 
 41.242.152.0/21
