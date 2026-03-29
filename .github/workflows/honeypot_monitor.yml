@@ -132,7 +132,7 @@ jobs:
               # cymru_bogons entfernt: fullbogons-ipv4.txt enthält nicht-routbare/reservierte
               # Bereiche (Bogons), keine Angreifer-IPs. is_valid_public_ipv4() filtert sie
               # zwar korrekt heraus, aber der Feed liefert 0 nutzbare IPs → sinnloser Request.
-              "sissden_honeypot":
+              "ipsum_level5":
                   "https://raw.githubusercontent.com/stamparm/ipsum/master/levels/5.txt",
           }
 
