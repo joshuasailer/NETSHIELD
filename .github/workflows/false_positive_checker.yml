@@ -70,7 +70,8 @@ jobs:
               "185.111.111.157", "185.111.111.158", "185.111.111.159",
               "192.64.87.219",
               "141.8.194.242", "35.186.224.24",
-              "185.199.109.133", "185.199.111.133",
+              # GitHub Pages / CDN (185.199.108.0–185.199.111.255, alle 4 Subnetze)
+              "185.199.108.0/22",
               "52.109.89.119",
               # Microsoft Teams (offiziell: learn.microsoft.com/en-us/microsoft-365/enterprise/urls-and-ip-address-ranges – ID 11/12, "Optimize Required")
               "52.112.0.0/14",       # Microsoft Teams (Audio/Video/Sharing)

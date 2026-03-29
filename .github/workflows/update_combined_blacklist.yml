@@ -183,8 +183,8 @@ jobs:
               "192.64.87.219",
               # Google Cloud / Spotify (GCP)
               "141.8.194.242", "35.186.224.24",
-              # GitHub Pages / CDN
-              "185.199.109.133", "185.199.111.133",
+              # GitHub Pages / CDN (185.199.108.0–185.199.111.255, alle 4 Subnetze)
+              "185.199.108.0/22",
               # Microsoft (OneDrive/Teams)
               "52.109.89.119",
               # Microsoft Teams (offiziell: learn.microsoft.com/en-us/microsoft-365/enterprise/urls-and-ip-address-ranges – ID 11/12, "Optimize Required")
