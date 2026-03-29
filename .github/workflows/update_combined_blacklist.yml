@@ -187,6 +187,9 @@ jobs:
               "185.199.109.133", "185.199.111.133",
               # Microsoft (OneDrive/Teams)
               "52.109.89.119",
+              # Microsoft Teams (offiziell: learn.microsoft.com/en-us/microsoft-365/enterprise/urls-and-ip-address-ranges – ID 11/12, "Optimize Required")
+              "52.112.0.0/14",       # Microsoft Teams (Audio/Video/Sharing)
+              "52.122.0.0/15",       # Microsoft Teams (inkl. 52.123.128.14)
               # Telekom Deutschland
               "80.146.236.47",
               # Google Services
@@ -283,7 +286,6 @@ jobs:
               "172.217.0.0/16",      # Google Serving (google.com / youtube.com)
               "34.64.0.0/10",        # Google Cloud / GFE (Google Front End)
               "35.184.0.0/13",       # Google Cloud (GFE / YouTube Streaming)
-              "192.178.0.0/15",      # Google Services (gstatic, googleapis etc.)
               # mail.com
               "74.208.4.200", "74.208.4.201", "74.208.4.220", "74.208.4.221",
               "82.165.159.130", "82.165.159.131",
