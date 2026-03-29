@@ -1,5 +1,5 @@
 # Score Decay Monitor – Report
-**Aktualisiert:** 2026-03-29 07:52 UTC
+**Aktualisiert:** 2026-03-29 07:55 UTC
 
 ---
 ## Übersicht
@@ -19,4 +19,4 @@ Das Entfernen aus combined + seen_db erfolgt ausschließlich durch
 `update_combined_blacklist` nach **180 Tagen** ohne Feed-Bestätigung.
 
 ---
-*Generiert: 2026-03-29 07:52 UTC | DB: 3936906 IPs*
+*Generiert: 2026-03-29 07:55 UTC | DB: 3936906 IPs*
