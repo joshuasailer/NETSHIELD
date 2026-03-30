@@ -1,5 +1,5 @@
 # NETSHIELD – North Korea (KP) IPv4 Ranges
-# Aktualisiert: 2026-03-29 06:36 UTC
+# Aktualisiert: 2026-03-30 04:27 UTC
 # IP-Ranges: 1
 
 175.45.176.0/22
