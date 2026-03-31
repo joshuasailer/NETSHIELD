@@ -1,0 +1,26 @@
+name: 🚨 False Positive Report
+description: Melde eine IP oder ein Subnetz, das fälschlicherweise blockiert wird.
+title: "[False Positive]: <IP oder Subnetz hier eintragen>"
+labels: ["false positive", "triage"]
+body:
+  - type: input
+    id: ip_address
+    attributes:
+      label: IP-Adresse / CIDR
+      description: Welche IP oder welches Netz wird fälschlicherweise blockiert? (z. B. 8.8.8.8)
+    validations:
+      required: true
+  - type: input
+    id: list_name
+    attributes:
+      label: Betroffene Liste
+      description: In welcher .txt Datei von NETSHIELD hast du den Eintrag gefunden?
+    validations:
+      required: true
+  - type: textarea
+    id: justification
+    attributes:
+      label: Warum ist das ein False Positive?
+      description: Gehört die IP zu einem bekannten Dienst (Cloudflare, Microsoft, Google, lokaler ISP)? Bitte kurz belegen.
+    validations:
+      required: true
